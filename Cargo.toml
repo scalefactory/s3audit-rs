@@ -1,0 +1,50 @@
+[package]
+name = "s3audit-rs"
+version = "0.1.0"
+authors = [
+    # Alphabetical by surname
+    "Tim Bannister <tim@scalefactory.com>",
+    "David O'Rourke <david@scalefactory.com>",
+]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/scalefactory/s3audit-rs"
+repository = "https://github.com/scalefactory/s3audit-rs"
+categories = [
+    "command-line-utilities",
+]
+keywords = [
+    "aws",
+    "cli",
+    "s3",
+    "security",
+]
+exclude = [
+    ".github",
+    ".gitignore",
+]
+
+[dependencies]
+anyhow = "1.0"
+log = "0.4"
+pretty_env_logger = "0.4"
+tokio = "0.2"
+
+[dependencies.rusoto_core]
+version = "0.45.0"
+default-features = false
+features = ["rustls"]
+
+[dependencies.rusoto_s3]
+version = "0.45.0"
+default-features = false
+features = ["rustls"]
+
+[dev-dependencies]
+pretty_assertions = "0.6"
+
+[dev-dependencies.rusoto_mock]
+version = "0.45.0"
+default-features = false
+features = ["rustls"]

@@ -1,0 +1,53 @@
+---
+name: 'Continuous Integration'
+on:
+  push:
+    branches:
+      - 'main'
+jobs:
+  test:
+    name: 'Cargo Test'
+    runs-on: 'ubuntu-latest'
+    strategy:
+      matrix:
+        # 1.40.0 is the MSRV
+        toolchain-version:
+          - 'stable'
+          - '1.40.0'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v2'
+        with:
+          fetch-depth: 1
+      - name: 'Target Cache'
+        uses: 'actions/cache@v1'
+        env:
+          cache-name: 'target-cache'
+        with:
+          path: 'target'
+          key: "${{ matrix.toolchain-version }}-${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}"
+      - name: 'Install Toolchain'
+        uses: 'actions-rs/toolchain@v1'
+        with:
+          profile: 'minimal'
+          toolchain: "${{ matrix.toolchain-version }}"
+          override: true
+      - name: 'Run Default Feature Tests'
+        uses: 'actions-rs/cargo@v1'
+        with:
+          command: 'test'
+# Commented out until we have a man page to lint.
+#  mandoc:
+#    name: 'Lint Man Page'
+#    runs-on: 'ubuntu-latest'
+#    steps:
+#      - name: 'Checkout'
+#        uses: 'actions/checkout@v2'
+#        with:
+#          fetch-depth: 1
+#      - name: 'Install mandoc'
+#        run: |
+#          sudo apt install mandoc
+#      - name: 'Lint Man Page'
+#        run: |
+#          mandoc -T lint man/hcdl.1
