@@ -10,10 +10,10 @@ jobs:
     runs-on: 'ubuntu-latest'
     strategy:
       matrix:
-        # 1.40.0 is the MSRV
+        # 1.41.0 is the MSRV
         toolchain-version:
           - 'stable'
-          - '1.40.0'
+          - '1.41.0'
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@v2'
