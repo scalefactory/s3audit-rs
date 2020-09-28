@@ -58,13 +58,13 @@ impl fmt::Display for BucketEncryption {
                     EMOJI_WARNING,
                 )
             },
-            Self::KMS     => {
+            Self::KMS => {
                 format!(
                     "{} Server side encryption enabled using KMS",
                     EMOJI_TICK,
                 )
             },
-            Self::None    => {
+            Self::None => {
                 format!(
                     "{} Server side encryption is not enabled",
                     EMOJI_CROSS,
