@@ -1,9 +1,13 @@
 // S3 client implementation
 use crate::common::EMOJI_ARROW;
-use crate::s3::public_access_block::PublicAccessBlock;
+use crate::s3::{
+    bucket_encryption::BucketEncryption,
+    public_access_block::PublicAccessBlock,
+};
 use anyhow::Result;
 use rusoto_core::Region;
 use rusoto_s3::{
+    GetBucketEncryptionRequest,
     GetPublicAccessBlockRequest,
     S3,
     S3Client,
@@ -25,7 +29,7 @@ impl Client {
     }
 
     // List all buckets on an account
-    pub async fn list_buckets(&self) -> Result<Vec<String>> {
+    async fn list_buckets(&self) -> Result<Vec<String>> {
         let output = self.client.list_buckets().await?;
 
         let bucket_names = if let Some(buckets) = output.buckets {
@@ -40,8 +44,30 @@ impl Client {
         Ok(bucket_names)
     }
 
+    async fn get_bucket_encryption(&self, bucket: &str) -> Result<BucketEncryption> {
+        let input = GetBucketEncryptionRequest {
+            bucket: bucket.to_owned(),
+        };
+
+        // We might get an Err here for two reasons:
+        //   - Encryption isn't enabled
+        //   - We don't have the s3:GetEncryptionConfiguration permission
+        //
+        // In the future it would be good to distinguish between the two, but
+        // that will involve some parsing of the XML message returned.
+        //
+        // For now, we'll just assert that there is no encryption and the user
+        // can verify it for themselves.
+        let output = match self.client.get_bucket_encryption(input).await {
+            Ok(res) => BucketEncryption::from(res),
+            Err(_)  => BucketEncryption::None,
+        };
+
+        Ok(output)
+    }
+
     // Get the bucket's public access block configuration
-    pub async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
+    async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
         let input = GetPublicAccessBlockRequest {
             bucket: bucket.to_owned(),
         };
@@ -55,12 +81,18 @@ impl Client {
     // Reports on a single bucket
     pub async fn report(&self, bucket: &str) -> Result<()> {
         println!("  {} {}", EMOJI_ARROW, bucket);
+
+        // Public access configuration
         println!("    {} Bucket public access configuration", EMOJI_ARROW);
 
         let public_access_blocks = self.get_public_access_block(bucket).await?;
         for block in public_access_blocks.iter() {
             println!("      {}", block);
         }
+
+        // Bucket encryption
+        let bucket_encryption = self.get_bucket_encryption(bucket).await?;
+        println!("    {}", bucket_encryption);
 
         Ok(())
     }
