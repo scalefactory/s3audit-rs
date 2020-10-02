@@ -1,8 +1,5 @@
 // Implements a nice enum for expressing public access block status
-use crate::common::{
-    EMOJI_CROSS,
-    EMOJI_TICK,
-};
+use crate::common::*;
 use rusoto_s3::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
@@ -15,30 +12,24 @@ pub enum PublicAccessBlockType {
     RestrictPublicBuckets(bool),
 }
 
-// Get the appropriate emoji for true or false status
-fn emoji<'a>(b: &bool) -> &'a str {
-    if *b {
-        EMOJI_TICK
-    }
-    else {
-        EMOJI_CROSS
-    }
-}
-
 impl fmt::Display for PublicAccessBlockType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let output = match self {
             Self::BlockPublicAcls(b) => {
-                format!("{} BlockPublicAcls is set to {}", emoji(b), b)
+                let emoji = Into::<EmojiBool>::into(*b);
+                format!("{} BlockPublicAcls is set to {}", emoji, b)
             },
             Self::BlockPublicPolicy(b) => {
-                format!("{} BlockPublicPolicy is set to {}", emoji(b), b)
+                let emoji = Into::<EmojiBool>::into(*b);
+                format!("{} BlockPublicPolicy is set to {}", emoji, b)
             },
             Self::IgnorePublicAcls(b) => {
-                format!("{} IgnorePublicAcls is set to {}", emoji(b), b)
+                let emoji = Into::<EmojiBool>::into(*b);
+                format!("{} IgnorePublicAcls is set to {}", emoji, b)
             },
             Self::RestrictPublicBuckets(b) => {
-                format!("{} RestrictPublicBuckets is set to {}", emoji(b), b)
+                let emoji = Into::<EmojiBool>::into(*b);
+                format!("{} RestrictPublicBuckets is set to {}", emoji, b)
             },
         };
 

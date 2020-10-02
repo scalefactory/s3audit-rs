@@ -1,5 +1,5 @@
 // S3 client implementation
-use crate::common::EMOJI_ARROW;
+use crate::common::Emoji;
 use crate::s3::{
     bucket_encryption::BucketEncryption,
     public_access_block::PublicAccessBlock,
@@ -80,10 +80,10 @@ impl Client {
 
     // Reports on a single bucket
     pub async fn report(&self, bucket: &str) -> Result<()> {
-        println!("  {} {}", EMOJI_ARROW, bucket);
+        println!("  {} {}", Emoji::Arrow, bucket);
 
         // Public access configuration
-        println!("    {} Bucket public access configuration", EMOJI_ARROW);
+        println!("    {} Bucket public access configuration", Emoji::Arrow);
 
         let public_access_blocks = self.get_public_access_block(bucket).await?;
         for block in public_access_blocks.iter() {

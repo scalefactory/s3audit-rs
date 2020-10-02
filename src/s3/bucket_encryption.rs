@@ -1,9 +1,5 @@
 // Bucket encryption config
-use crate::common::{
-    EMOJI_CROSS,
-    EMOJI_TICK,
-    EMOJI_WARNING,
-};
+use crate::common::Emoji;
 use rusoto_s3::GetBucketEncryptionOutput;
 use std::fmt;
 
@@ -55,25 +51,25 @@ impl fmt::Display for BucketEncryption {
             Self::Default => {
                 format!(
                     "{} Server side encryption enabled using the default AES256 algorithm",
-                    EMOJI_WARNING,
+                    Emoji::Warning,
                 )
             },
             Self::KMS => {
                 format!(
                     "{} Server side encryption enabled using KMS",
-                    EMOJI_TICK,
+                    Emoji::Tick,
                 )
             },
             Self::None => {
                 format!(
                     "{} Server side encryption is not enabled",
-                    EMOJI_CROSS,
+                    Emoji::Cross,
                 )
             },
             Self::Unknown(algorithm) => {
                 format!(
                     "{} Server side encryption using unknown algorithm: {}",
-                    EMOJI_WARNING,
+                    Emoji::Warning,
                     algorithm,
                 )
             },
