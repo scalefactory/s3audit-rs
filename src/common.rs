@@ -38,6 +38,6 @@ impl fmt::Display for EmojiBool {
 
 impl From<bool> for EmojiBool {
   fn from(item: bool) -> Self {
-    EmojiBool(item)
+    Self(item)
   }
 }
