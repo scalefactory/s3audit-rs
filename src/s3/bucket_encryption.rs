@@ -22,7 +22,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
         };
 
         // Only a single rule makes sense currently, try to get it.
-        let rule = if rules.len() > 0 {
+        let rule = if !rules.is_empty() {
             // We should be guaranteed a rule here.
             rules.first().expect("first encryption rule")
         }
