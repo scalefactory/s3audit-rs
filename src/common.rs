@@ -8,13 +8,14 @@ pub enum Emoji {
 }
 
 impl fmt::Display for Emoji {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let symbol = match *self {
         Emoji::Arrow => "❯",
         Emoji::Cross => "✖",
         Emoji::Tick => "✔",
         Emoji::Warning => "⚠️",
     };
+
     write!(f, "{}", symbol)
   }
 }
@@ -23,13 +24,14 @@ impl fmt::Display for Emoji {
 pub struct EmojiBool(bool);
 
 impl fmt::Display for EmojiBool {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let item = if self.0{
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    let item = if self.0 {
       Emoji::Tick
     }
     else {
       Emoji::Cross
     };
+
     item.fmt(f)
   }
 }
