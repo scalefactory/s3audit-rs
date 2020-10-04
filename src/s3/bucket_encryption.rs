@@ -18,7 +18,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             config.rules
         }
         else {
-            return BucketEncryption::None;
+            return Self::None;
         };
 
         // Only a single rule makes sense currently, try to get it.
@@ -27,7 +27,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             rules.first().expect("first encryption rule")
         }
         else {
-            return BucketEncryption::None;
+            return Self::None;
         };
 
         let rule = if let Some(rule) = &rule.apply_server_side_encryption_by_default {
@@ -38,9 +38,9 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
         };
 
         match rule.sse_algorithm.as_ref() {
-            "AES256"  => BucketEncryption::Default,
-            "aws:kms" => BucketEncryption::KMS,
-            algorithm => BucketEncryption::Unknown(algorithm.into()),
+            "AES256"  => Self::Default,
+            "aws:kms" => Self::KMS,
+            algorithm => Self::Unknown(algorithm.into()),
         }
     }
 }
