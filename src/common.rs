@@ -1,5 +1,6 @@
 use std::fmt;
 
+// Emoji used during report output
 pub enum Emoji {
     Arrow,
     Cross,
@@ -10,10 +11,10 @@ pub enum Emoji {
 impl fmt::Display for Emoji {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let symbol = match *self {
-        Emoji::Arrow => "❯",
-        Emoji::Cross => "✖",
-        Emoji::Tick => "✔",
-        Emoji::Warning => "⚠️",
+        Self::Arrow => "❯",
+        Self::Cross => "✖",
+        Self::Tick => "✔",
+        Self::Warning => "⚠️",
     };
 
     write!(f, "{}", symbol)
