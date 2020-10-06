@@ -4,7 +4,7 @@ use rusoto_s3::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PublicAccessBlockType {
     BlockPublicAcls(bool),
     BlockPublicPolicy(bool),
@@ -37,7 +37,7 @@ impl fmt::Display for PublicAccessBlockType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PublicAccessBlock(Vec<PublicAccessBlockType>);
 
 impl From<GetPublicAccessBlockOutput> for PublicAccessBlock {
@@ -67,5 +67,36 @@ impl Deref for PublicAccessBlock {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusoto_s3::PublicAccessBlockConfiguration;
+
+    #[test]
+    fn test_from() {
+        let public_access_block_configuration = PublicAccessBlockConfiguration {
+            block_public_acls: Some(true),
+            block_public_policy: Some(false),
+            ignore_public_acls: Some(true),
+            restrict_public_buckets: Some(false),
+        };
+
+        let output = GetPublicAccessBlockOutput {
+            public_access_block_configuration: Some(public_access_block_configuration),
+        };
+
+        let expected = PublicAccessBlock(vec![
+            PublicAccessBlockType::BlockPublicAcls(true),
+            PublicAccessBlockType::BlockPublicPolicy(false),
+            PublicAccessBlockType::IgnorePublicAcls(true),
+            PublicAccessBlockType::RestrictPublicBuckets(false),
+        ]);
+
+        let public_access_block: PublicAccessBlock = output.into();
+
+        assert_eq!(public_access_block, expected)
     }
 }
