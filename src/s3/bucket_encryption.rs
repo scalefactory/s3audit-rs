@@ -3,6 +3,7 @@ use crate::common::Emoji;
 use rusoto_s3::GetBucketEncryptionOutput;
 use std::fmt;
 
+#[derive(Debug, PartialEq)]
 pub enum BucketEncryption {
     Default,
     KMS,
@@ -76,5 +77,123 @@ impl fmt::Display for BucketEncryption {
         };
 
         write!(f, "{}", output)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusoto_s3::{
+        ServerSideEncryptionByDefault,
+        ServerSideEncryptionConfiguration,
+        ServerSideEncryptionRule,
+    };
+
+    #[test]
+    fn test_from_default_encryption() {
+        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
+            sse_algorithm: "AES256".into(),
+            ..Default::default()
+        };
+
+        let server_side_encryption_rule = ServerSideEncryptionRule {
+            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+        };
+
+        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
+            rules: vec![server_side_encryption_rule],
+        };
+
+        let output = GetBucketEncryptionOutput {
+            server_side_encryption_configuration: Some(server_side_encryption_configuration),
+        };
+
+        let expected = BucketEncryption::Default;
+
+        let bucket_encryption: BucketEncryption = output.into();
+
+        assert_eq!(bucket_encryption, expected)
+    }
+
+    #[test]
+    fn test_from_kms_encryption() {
+        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
+            kms_master_key_id: Some("arn:aws:foo:bar:test".into()),
+            sse_algorithm: "aws:kms".into(),
+        };
+
+        let server_side_encryption_rule = ServerSideEncryptionRule {
+            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+        };
+
+        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
+            rules: vec![server_side_encryption_rule],
+        };
+
+        let output = GetBucketEncryptionOutput {
+            server_side_encryption_configuration: Some(server_side_encryption_configuration),
+        };
+
+        let expected = BucketEncryption::KMS;
+
+        let bucket_encryption: BucketEncryption = output.into();
+
+        assert_eq!(bucket_encryption, expected);
+    }
+
+    #[test]
+    fn test_from_unknown_encryption() {
+        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
+            sse_algorithm: "wat".into(),
+            ..Default::default()
+        };
+
+        let server_side_encryption_rule = ServerSideEncryptionRule {
+            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+        };
+
+        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
+            rules: vec![server_side_encryption_rule],
+        };
+
+        let output = GetBucketEncryptionOutput {
+            server_side_encryption_configuration: Some(server_side_encryption_configuration),
+        };
+
+        let expected = BucketEncryption::Unknown("wat".into());
+
+        let bucket_encryption: BucketEncryption = output.into();
+
+        assert_eq!(bucket_encryption, expected);
+    }
+
+    #[test]
+    fn test_from_no_rules() {
+        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
+            rules: Vec::new()
+        };
+
+        let output = GetBucketEncryptionOutput {
+            server_side_encryption_configuration: Some(server_side_encryption_configuration),
+        };
+
+        let expected = BucketEncryption::None;
+
+        let bucket_encryption: BucketEncryption = output.into();
+
+        assert_eq!(bucket_encryption, expected);
+    }
+
+    #[test]
+    fn test_from_no_sse_config() {
+        let output = GetBucketEncryptionOutput {
+            server_side_encryption_configuration: None,
+        };
+
+        let expected = BucketEncryption::None;
+
+        let bucket_encryption: BucketEncryption = output.into();
+
+        assert_eq!(bucket_encryption, expected);
     }
 }
