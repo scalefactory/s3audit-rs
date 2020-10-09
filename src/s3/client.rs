@@ -1,6 +1,7 @@
 // S3 client implementation
 use crate::common::Emoji;
 use crate::s3::{
+    bucket_acl::BucketAcl,
     bucket_encryption::BucketEncryption,
     bucket_logging::BucketLogging,
     bucket_versioning::BucketVersioning,
@@ -10,6 +11,7 @@ use crate::s3::{
 use anyhow::Result;
 use rusoto_core::Region;
 use rusoto_s3::{
+    GetBucketAclRequest,
     GetBucketEncryptionRequest,
     GetBucketLoggingRequest,
     GetBucketVersioningRequest,
@@ -48,6 +50,17 @@ impl Client {
         };
 
         Ok(bucket_names)
+    }
+
+    async fn get_bucket_acl(&self, bucket: &str) -> Result<BucketAcl> {
+        let input = GetBucketAclRequest {
+            bucket: bucket.into(),
+        };
+
+        let output = self.client.get_bucket_acl(input).await?;
+        let config: BucketAcl = output.into();
+
+        Ok(config)
     }
 
     async fn get_bucket_encryption(&self, bucket: &str) -> Result<BucketEncryption> {
@@ -131,6 +144,10 @@ impl Client {
         // Static website hosting
         let bucket_website = self.get_bucket_website(bucket).await?;
         println!("    {}", bucket_website);
+
+        // Bucket ACL
+        let bucket_acl = self.get_bucket_acl(bucket).await?;
+        println!("    {}", bucket_acl);
 
         // Bucket logging
         let bucket_logging = self.get_bucket_logging(bucket).await?;
