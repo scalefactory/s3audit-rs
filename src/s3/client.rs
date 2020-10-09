@@ -2,6 +2,7 @@
 use crate::common::Emoji;
 use crate::s3::{
     bucket_encryption::BucketEncryption,
+    bucket_logging::BucketLogging,
     bucket_versioning::BucketVersioning,
     bucket_website::BucketWebsite,
     public_access_block::PublicAccessBlock,
@@ -10,6 +11,7 @@ use anyhow::Result;
 use rusoto_core::Region;
 use rusoto_s3::{
     GetBucketEncryptionRequest,
+    GetBucketLoggingRequest,
     GetBucketVersioningRequest,
     GetBucketWebsiteRequest,
     GetPublicAccessBlockRequest,
@@ -55,6 +57,17 @@ impl Client {
 
         let output = self.client.get_bucket_encryption(input).await;
         let config: BucketEncryption = output.into();
+
+        Ok(config)
+    }
+
+    async fn get_bucket_logging(&self, bucket: &str) -> Result<BucketLogging> {
+        let input = GetBucketLoggingRequest {
+            bucket: bucket.into(),
+        };
+
+        let output = self.client.get_bucket_logging(input).await?;
+        let config: BucketLogging = output.into();
 
         Ok(config)
     }
@@ -118,6 +131,10 @@ impl Client {
         // Static website hosting
         let bucket_website = self.get_bucket_website(bucket).await?;
         println!("    {}", bucket_website);
+
+        // Bucket logging
+        let bucket_logging = self.get_bucket_logging(bucket).await?;
+        println!("    {}", bucket_logging);
 
         Ok(())
     }
