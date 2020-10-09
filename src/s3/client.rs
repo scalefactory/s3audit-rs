@@ -53,21 +53,10 @@ impl Client {
             bucket: bucket.to_owned(),
         };
 
-        // We might get an Err here for two reasons:
-        //   - Encryption isn't enabled
-        //   - We don't have the s3:GetEncryptionConfiguration permission
-        //
-        // In the future it would be good to distinguish between the two, but
-        // that will involve some parsing of the XML message returned.
-        //
-        // For now, we'll just assert that there is no encryption and the user
-        // can verify it for themselves.
-        let output = match self.client.get_bucket_encryption(input).await {
-            Ok(res) => BucketEncryption::from(res),
-            Err(_)  => BucketEncryption::None,
-        };
+        let output = self.client.get_bucket_encryption(input).await;
+        let config: BucketEncryption = output.into();
 
-        Ok(output)
+        Ok(config)
     }
 
     async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
@@ -86,6 +75,7 @@ impl Client {
             bucket: bucket.into(),
         };
 
+        // Note that we aren't using the `?` operator here.
         let output = self.client.get_bucket_website(input).await;
         let config: BucketWebsite = output.into();
 

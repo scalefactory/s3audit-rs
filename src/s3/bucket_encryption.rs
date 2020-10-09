@@ -1,6 +1,10 @@
 // Bucket encryption config
 use crate::common::Emoji;
-use rusoto_s3::GetBucketEncryptionOutput;
+use rusoto_core::RusotoError;
+use rusoto_s3::{
+    GetBucketEncryptionError,
+    GetBucketEncryptionOutput,
+};
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -10,6 +14,9 @@ pub enum BucketEncryption {
     None,
     Unknown(String),
 }
+
+// Type alias to avoid long long in From impl.
+type EncryptionResult = Result<GetBucketEncryptionOutput, RusotoError<GetBucketEncryptionError>>;
 
 // Could probably replace a log of this with some .and_then shenanigans.
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
@@ -42,6 +49,15 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             "AES256"  => Self::Default,
             "aws:kms" => Self::KMS,
             algorithm => Self::Unknown(algorithm.into()),
+        }
+    }
+}
+
+impl From<EncryptionResult> for BucketEncryption {
+    fn from(res: EncryptionResult) -> Self {
+        match res {
+            Ok(output) => Self::from(output),
+            Err(_)     => Self::None,
         }
     }
 }
