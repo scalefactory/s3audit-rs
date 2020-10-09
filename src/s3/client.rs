@@ -2,12 +2,14 @@
 use crate::common::Emoji;
 use crate::s3::{
     bucket_encryption::BucketEncryption,
+    bucket_versioning::BucketVersioning,
     public_access_block::PublicAccessBlock,
 };
 use anyhow::Result;
 use rusoto_core::Region;
 use rusoto_s3::{
     GetBucketEncryptionRequest,
+    GetBucketVersioningRequest,
     GetPublicAccessBlockRequest,
     S3,
     S3Client,
@@ -66,6 +68,17 @@ impl Client {
         Ok(output)
     }
 
+    async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
+        let input = GetBucketVersioningRequest {
+            bucket: bucket.into(),
+        };
+
+        let output = self.client.get_bucket_versioning(input).await?;
+        let config: BucketVersioning = output.into();
+
+        Ok(config)
+    }
+
     // Get the bucket's public access block configuration
     async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
         let input = GetPublicAccessBlockRequest {
@@ -93,6 +106,11 @@ impl Client {
         // Bucket encryption
         let bucket_encryption = self.get_bucket_encryption(bucket).await?;
         println!("    {}", bucket_encryption);
+
+        // Bucket versioning and MFA delete
+        let bucket_versioning = self.get_bucket_versioning(bucket).await?;
+        println!("    {}", bucket_versioning.versioning());
+        println!("    {}", bucket_versioning.mfa_delete());
 
         Ok(())
     }
