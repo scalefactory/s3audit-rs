@@ -86,10 +86,8 @@ impl Client {
             bucket: bucket.into(),
         };
 
-        let config = match self.client.get_bucket_website(input).await {
-            Ok(_)  => BucketWebsite::Enabled,
-            Err(_) => BucketWebsite::Disabled,
-        };
+        let output = self.client.get_bucket_website(input).await;
+        let config: BucketWebsite = output.into();
 
         Ok(config)
     }
