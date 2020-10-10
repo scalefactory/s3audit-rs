@@ -22,27 +22,21 @@ type EncryptionResult = Result<GetBucketEncryptionOutput, RusotoError<GetBucketE
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
     fn from(output: GetBucketEncryptionOutput) -> Self {
         // Get the rules if there are any
-        let rules = if let Some(config) = output.server_side_encryption_configuration {
-            config.rules
-        }
-        else {
-            return Self::None;
+        let rules = match output.server_side_encryption_configuration {
+            None         => return Self::None,
+            Some(config) => config.rules,
         };
 
-        // Only a single rule makes sense currently, try to get it.
-        let rule = if !rules.is_empty() {
-            // We should be guaranteed a rule here.
-            rules.first().expect("first encryption rule")
-        }
-        else {
+        if rules.is_empty() {
             return Self::None;
-        };
+        }
 
-        let rule = if let Some(rule) = &rule.apply_server_side_encryption_by_default {
-            rule
-        }
-        else {
-            return Self::None;
+        // We should be guaranteed a rule here.
+        let rule = rules.first().expect("first encryption rule");
+
+        let rule = match &rule.apply_server_side_encryption_by_default {
+            None       => return Self::None,
+            Some(rule) => rule,
         };
 
         match rule.sse_algorithm.as_ref() {
