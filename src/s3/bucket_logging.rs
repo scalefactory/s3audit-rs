@@ -45,7 +45,7 @@ mod tests {
     use rusoto_s3::LoggingEnabled;
 
     #[test]
-    fn test_from_for_bucket_logging() {
+    fn test_from_for_bucket_logging_enabled() {
         let logging_enabled = LoggingEnabled {
             target_bucket: "foo".into(),
             ..Default::default()
@@ -56,6 +56,19 @@ mod tests {
         };
 
         let expected = BucketLogging::Enabled("foo".into());
+
+        let logging: BucketLogging = output.into();
+
+        assert_eq!(logging, expected)
+    }
+
+    #[test]
+    fn test_from_for_bucket_logging_disabled() {
+        let output = GetBucketLoggingOutput {
+            logging_enabled: None,
+        };
+
+        let expected = BucketLogging::Disabled;
 
         let logging: BucketLogging = output.into();
 
