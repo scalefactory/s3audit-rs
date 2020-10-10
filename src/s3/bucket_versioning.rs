@@ -107,3 +107,37 @@ impl BucketVersioning {
         &self.versioning
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_for_bucket_versioning() {
+        let tests = vec![
+            ("Enabled", "Enabled", MFAStatus::Enabled, VersioningStatus::Enabled),
+            ("Disabled", "Suspended", MFAStatus::Disabled, VersioningStatus::Suspended),
+        ];
+
+        for test in tests {
+            let mfa_delete          = test.0;
+            let status              = test.1;
+            let mfa_delete_expected = test.2;
+            let versioning_expected = test.3;
+
+            let output = GetBucketVersioningOutput {
+                mfa_delete: Some(mfa_delete.into()),
+                status:     Some(status.into()),
+            };
+
+            let expected = BucketVersioning {
+                mfa_delete: mfa_delete_expected,
+                versioning: versioning_expected,
+            };
+
+            let versioning: BucketVersioning = output.into();
+
+            assert_eq!(versioning, expected)
+        }
+    }
+}
