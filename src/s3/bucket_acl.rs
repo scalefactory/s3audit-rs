@@ -62,3 +62,80 @@ impl fmt::Display for BucketAcl {
         write!(f, "{}", output)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusoto_s3::{
+        Grant,
+        Grantee,
+        Owner,
+    };
+
+    const PRIVATE_GROUP: &str = "http://acs.amazonaws.com/groups/private/lovelace";
+    const PUBLIC_GROUP: &str = PUBLIC_URIS[0];
+
+    #[test]
+    fn test_from_for_bucket_acl_private() {
+        let owner = Owner {
+            display_name: Some("Ada Lovelace".into()),
+            id:           Some("lovelace".into()),
+        };
+
+        let grantee = Grantee {
+            display_name:  Some("Ada Lovelace".into()),
+            email_address: Some("lovelace@example.org".into()),
+            id:            Some("lovelace".into()),
+            type_:         "N/A".into(),
+            uri:           Some(PRIVATE_GROUP.into()),
+        };
+
+        let grant = Grant {
+            grantee:    Some(grantee),
+            permission: Some("private".into()),
+        };
+
+        let output = GetBucketAclOutput {
+            grants: Some(vec![grant]),
+            owner:  Some(owner),
+        };
+
+        let expected = BucketAcl::Private;
+
+        let bucket_acl: BucketAcl = output.into();
+
+        assert_eq!(bucket_acl, expected)
+    }
+
+    #[test]
+    fn test_from_for_bucket_acl_public() {
+        let owner = Owner {
+            display_name: Some("Ada Lovelace".into()),
+            id:           Some("lovelace".into()),
+        };
+
+        let grantee = Grantee {
+            display_name:  Some("Ada Lovelace".into()),
+            email_address: Some("lovelace@example.org".into()),
+            id:            Some("lovelace".into()),
+            type_:         "N/A".into(),
+            uri:           Some(PUBLIC_GROUP.into()),
+        };
+
+        let grant = Grant {
+            grantee:    Some(grantee),
+            permission: Some("public".into()),
+        };
+
+        let output = GetBucketAclOutput {
+            grants: Some(vec![grant]),
+            owner:  Some(owner),
+        };
+
+        let expected = BucketAcl::Public;
+
+        let bucket_acl: BucketAcl = output.into();
+
+        assert_eq!(bucket_acl, expected)
+    }
+}
