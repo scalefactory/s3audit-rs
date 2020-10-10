@@ -42,7 +42,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             rule
         }
         else {
-            return BucketEncryption::None;
+            return Self::None;
         };
 
         match rule.sse_algorithm.as_ref() {
