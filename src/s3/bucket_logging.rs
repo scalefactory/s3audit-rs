@@ -11,14 +11,9 @@ pub enum BucketLogging {
 
 impl From<GetBucketLoggingOutput> for BucketLogging {
     fn from(output: GetBucketLoggingOutput) -> Self {
-        if let Some(logging_enabled) = output.logging_enabled {
-            let target_bucket = logging_enabled.target_bucket.to_owned();
-
-            Self::Enabled(target_bucket)
-        }
-        else {
-            Self::Disabled
-        }
+        output.logging_enabled.map_or(Self::Disabled, |logging| {
+            Self::Enabled(logging.target_bucket)
+        })
     }
 }
 
