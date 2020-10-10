@@ -77,19 +77,11 @@ pub struct BucketVersioning {
 
 impl From<GetBucketVersioningOutput> for BucketVersioning {
     fn from(output: GetBucketVersioningOutput) -> Self {
-        let mfa_delete: MFAStatus = if let Some(mfa) = output.mfa_delete {
-            mfa.into()
-        }
-        else {
-            MFAStatus::Disabled
-        };
+        let mfa_delete: MFAStatus = output.mfa_delete
+            .map_or(MFAStatus::Disabled, |mfa_delete| mfa_delete.into());
 
-        let versioning: VersioningStatus = if let Some(status) = output.status {
-            status.into()
-        }
-        else {
-            VersioningStatus::Suspended
-        };
+        let versioning: VersioningStatus = output.status
+            .map_or(VersioningStatus::Suspended, |status| status.into());
 
         Self {
             mfa_delete: mfa_delete,
