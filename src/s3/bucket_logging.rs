@@ -38,3 +38,27 @@ impl fmt::Display for BucketLogging {
         write!(f, "{}", output)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusoto_s3::LoggingEnabled;
+
+    #[test]
+    fn test_from_for_bucket_logging() {
+        let logging_enabled = LoggingEnabled {
+            target_bucket: "foo".into(),
+            ..Default::default()
+        };
+
+        let output = GetBucketLoggingOutput {
+            logging_enabled: Some(logging_enabled),
+        };
+
+        let expected = BucketLogging::Enabled("foo".into());
+
+        let logging: BucketLogging = output.into();
+
+        assert_eq!(logging, expected)
+    }
+}
