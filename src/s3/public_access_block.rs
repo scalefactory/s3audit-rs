@@ -45,6 +45,8 @@ impl From<GetPublicAccessBlockOutput> for PublicAccessBlock {
         let config = output.public_access_block_configuration
             .expect("public_access_block_configuration");
 
+        // These fields are all documented as being required, so unwrap should
+        // be fine.
         let block_public_acls = config.block_public_acls.unwrap();
         let block_public_policy = config.block_public_policy.unwrap();
         let ignore_public_acls = config.ignore_public_acls.unwrap();
