@@ -40,14 +40,11 @@ impl Client {
     async fn list_buckets(&self) -> Result<Vec<String>> {
         let output = self.client.list_buckets().await?;
 
-        let bucket_names = if let Some(buckets) = output.buckets {
+        let bucket_names = output.buckets.map_or_else(Vec::new, |buckets| {
             buckets.iter()
-                .filter_map(|b| b.name.to_owned())
+                .filter_map(|bucket| bucket.name.to_owned())
                 .collect()
-        }
-        else {
-            Vec::new()
-        };
+        });
 
         Ok(bucket_names)
     }
