@@ -11,6 +11,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/scalefactory/s3audit-rs"
 repository = "https://github.com/scalefactory/s3audit-rs"
+description = "Audit Amazon S3 buckets against recommended practices"
 categories = [
     "command-line-utilities",
 ]
