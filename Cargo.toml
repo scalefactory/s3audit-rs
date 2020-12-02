@@ -1,5 +1,5 @@
 [package]
-name = "s3audit-rs"
+name = "s3audit"
 version = "0.1.0"
 authors = [
     # Alphabetical by surname
