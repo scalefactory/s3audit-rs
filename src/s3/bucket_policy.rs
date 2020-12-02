@@ -151,7 +151,7 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         let effect = String::from(jv["Effect"].as_str().unwrap());
 
         // If we're denying stuff, wildcards are fine.
-        if effect.to_lowercase() == "deny" {
+        if effect == "Deny" {
             return Self::NoWildcards;
         }
 
