@@ -20,12 +20,15 @@ jobs:
         with:
           fetch-depth: 1
       - name: 'Target Cache'
-        uses: 'actions/cache@v1'
+        uses: 'actions/cache@v2'
         env:
-          cache-name: 'target-cache'
+          cache-name: 'cargo-cache'
         with:
-          path: 'target'
-          key: "${{ matrix.toolchain-version }}-${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}"
+          path: |
+            ~/.cargo/git
+            ~/.cargo/registry
+            target
+          key: "${{ env.cache-name }}-${{ matrix.toolchain-version }}-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}"
       - name: 'Install Toolchain'
         uses: 'actions-rs/toolchain@v1'
         with:
