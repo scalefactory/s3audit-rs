@@ -4,6 +4,8 @@ use rusoto_s3::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
 
+const WILDCARD: &str = "*";
+
 #[derive(Debug, PartialEq)]
 pub enum BucketPolicy {
     None,
@@ -15,41 +17,55 @@ pub enum BucketPolicy {
 struct Principal(Vec<String>);
 
 impl Principal {
-    fn num_wildcards(&self) -> usize {
+    fn wildcards(&self) -> usize {
         self.0.iter()
-            .filter(|&arn| arn == "*")
+            .filter(|&arn| arn == WILDCARD)
             .count()
     }
 }
 
+// Takes a Value representing the Principal entry in a Bucket Policy and
+// returns a Vec of the discovered ARNs wrapped in a Principal struct.
 impl From<&Value> for Principal {
     fn from(value: &Value) -> Self {
         let output = match value {
-            Value::String(s) => {
-                let v = vec![
-                    String::from(s),
+            // "Principal": "arn:aws:iam::etc"
+            Value::String(arn) => {
+                let arns = vec![
+                    String::from(arn),
                 ];
 
-                Self(v)
+                Self(arns)
             },
+            // "Principal": {
+            //   "AWS": [
+            //     "arn:aws:iam::foo",
+            //     "123456789012",
+            //     "*"
+            //   ]
+            // }
+            // or
+            // "Principal": {
+            //   "AWS": "arn:aws:iam::foo"
+            // }
             Value::Object(o) => {
-                // This could also be "Federated" or "Service", but we aren't
-                // interested in those.
+                // This could also be "Federated", "Service", "CanonicalUser",
+                // etc, but we aren't interested in those.
                 match &o["AWS"] {
-                    Value::String(s) => {
-                        let v = vec![
-                            String::from(s),
+                    Value::String(arn) => {
+                        let arns = vec![
+                            String::from(arn),
                         ];
 
-                        Self(v)
+                        Self(arns)
                     },
                     Value::Array(vec) => {
                         // Each entry should be a string now.
-                        let strings: Vec<String> = vec.iter()
+                        let arns: Vec<String> = vec.iter()
                             .map(|s| String::from(s.as_str().unwrap()))
                             .collect();
 
-                        Self(strings)
+                        Self(arns)
                     },
                     _ => Self(Vec::new()),
                 }
@@ -87,7 +103,7 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         // Process the principals.
         let principal = &jv["Principal"];
         let principal: Principal = principal.into();
-        let principal_wildcards = principal.num_wildcards();
+        let principal_wildcards = principal.wildcards();
 
         wildcard_statements_total += principal_wildcards;
 
