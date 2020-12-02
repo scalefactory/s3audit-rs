@@ -3,19 +3,30 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
+use clap::{
+    crate_description,
+    crate_name,
+    crate_version,
+    App,
+    Arg,
+};
+use std::env;
 
 mod common;
 mod s3;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let app = clap::App::new(clap::crate_name!())
-      .version(clap::crate_version!())
-      .about(clap::crate_description!())
-      .arg(clap::Arg::from_usage("-p, --profile=[NAME] 'Provides an input file to the program'"));
+    let matches = App::new(crate_name!())
+        .version(crate_version!())
+        .about(crate_description!())
+        .arg(
+            Arg::from_usage("-p, --profile=[NAME] 'Specify an AWS profile name to use'")
+        )
+        .get_matches();
 
-    if let Some(profile_name) = app.get_matches().value_of("profile") {
-        std::env::set_var("AWS_PROFILE",&*profile_name);
+    if let Some(profile_name) = matches.value_of("profile") {
+        env::set_var("AWS_PROFILE", &*profile_name);
     }
 
     let client = s3::Client::new();
