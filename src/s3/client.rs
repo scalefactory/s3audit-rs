@@ -155,6 +155,10 @@ impl Client {
         let bucket_website = self.get_bucket_website(bucket).await?;
         println!("    {}", bucket_website);
 
+        // Bucket policy
+        let bucket_policy = self.get_bucket_policy(bucket).await?;
+        println!("    {}", bucket_policy);
+
         // Bucket ACL
         let bucket_acl = self.get_bucket_acl(bucket).await?;
         println!("    {}", bucket_acl);

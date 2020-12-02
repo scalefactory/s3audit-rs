@@ -147,29 +147,35 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         let jv: Value = serde_json::from_str(&policy)
             .expect("Invalid JSON from AWS");
 
-        // Policies MUST have an effect. This should be safe.
-        let effect = String::from(jv["Effect"].as_str().unwrap());
-
-        // If we're denying stuff, wildcards are fine.
-        if effect == "Deny" {
-            return Self::NoWildcards;
-        }
+        // The policy will contain an array of statements.
+        let statements = &jv["Statement"];
 
         let mut wildcard_statements_total: usize = 0;
 
-        // Process the actions.
-        let action = &jv["Action"];
-        let action: Action = action.into();
-        let action_wildcards = action.wildcards();
+        for statement in statements.as_array().unwrap().iter() {
+            // Policies MUST have an effect. This should be safe.
+            let effect = statement["Effect"].as_str().unwrap();
 
-        wildcard_statements_total += action_wildcards;
+            // If we're denying stuff, wildcards are fine and we can proceed
+            // to the next statement.
+            if effect == "Deny" {
+                continue
+            }
 
-        // Process the principals.
-        let principal = &jv["Principal"];
-        let principal: Principal = principal.into();
-        let principal_wildcards = principal.wildcards();
+            // Process the actions.
+            let action = &statement["Action"];
+            let action: Action = action.into();
+            let action_wildcards = action.wildcards();
 
-        wildcard_statements_total += principal_wildcards;
+            wildcard_statements_total += action_wildcards;
+
+            // Process the principals.
+            let principal = &statement["Principal"];
+            let principal: Principal = principal.into();
+            let principal_wildcards = principal.wildcards();
+
+            wildcard_statements_total += principal_wildcards;
+        }
 
         if wildcard_statements_total == 0 {
             return Self::NoWildcards;
