@@ -4,6 +4,7 @@ use crate::s3::{
     bucket_acl::BucketAcl,
     bucket_encryption::BucketEncryption,
     bucket_logging::BucketLogging,
+    bucket_policy::BucketPolicy,
     bucket_versioning::BucketVersioning,
     bucket_website::BucketWebsite,
     public_access_block::PublicAccessBlock,
@@ -14,6 +15,7 @@ use rusoto_s3::{
     GetBucketAclRequest,
     GetBucketEncryptionRequest,
     GetBucketLoggingRequest,
+    GetBucketPolicyRequest,
     GetBucketVersioningRequest,
     GetBucketWebsiteRequest,
     GetPublicAccessBlockRequest,
@@ -78,6 +80,17 @@ impl Client {
 
         let output = self.client.get_bucket_logging(input).await?;
         let config: BucketLogging = output.into();
+
+        Ok(config)
+    }
+
+    async fn get_bucket_policy(&self, bucket: &str) -> Result<BucketPolicy> {
+        let input = GetBucketPolicyRequest {
+            bucket: bucket.into(),
+        };
+
+        let output = self.client.get_bucket_policy(input).await?;
+        let config: BucketPolicy = output.into();
 
         Ok(config)
     }
