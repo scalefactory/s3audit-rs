@@ -15,34 +15,31 @@ pub enum BucketEncryption {
     Unknown(String),
 }
 
-// Type alias to avoid long long in From impl.
+// Type alias to avoid long lines in From impl.
 type EncryptionResult = Result<GetBucketEncryptionOutput, RusotoError<GetBucketEncryptionError>>;
 
 // Could probably replace a log of this with some .and_then shenanigans.
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
     fn from(output: GetBucketEncryptionOutput) -> Self {
-        // Get the rules if there are any
-        let rules = match output.server_side_encryption_configuration {
-            None         => return Self::None,
-            Some(config) => config.rules,
-        };
+        let sse_algorithm = output.server_side_encryption_configuration
+            .map(|config| config.rules)
+            .and_then(|rules| {
+                if rules.is_empty() {
+                    None
+                }
+                else {
+                    // first() returns an Option<&T>, we need an Option<T>
+                    rules.first().map(|rule| rule.to_owned())
+                }
+            })
+            .and_then(|rule| rule.apply_server_side_encryption_by_default)
+            .map(|rule| rule.sse_algorithm);
 
-        if rules.is_empty() {
-            return Self::None;
-        }
-
-        // We should be guaranteed a rule here.
-        let rule = rules.first().expect("first encryption rule");
-
-        let rule = match &rule.apply_server_side_encryption_by_default {
-            None       => return Self::None,
-            Some(rule) => rule,
-        };
-
-        match rule.sse_algorithm.as_ref() {
-            "AES256"  => Self::Default,
-            "aws:kms" => Self::KMS,
-            algorithm => Self::Unknown(algorithm.into()),
+        match sse_algorithm.as_deref() {
+            Some("AES256")  => Self::Default,
+            Some("aws:kms") => Self::KMS,
+            Some(algorithm) => Self::Unknown(algorithm.into()),
+            None            => Self::None,
         }
     }
 }
