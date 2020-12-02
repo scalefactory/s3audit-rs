@@ -284,6 +284,7 @@ mod tests {
         let expected = vec!["*"];
 
         assert_eq!(principal.0, expected);
+        assert_eq!(principal.wildcards(), 1);
     }
 
     #[test]
@@ -309,5 +310,6 @@ mod tests {
         ];
 
         assert_eq!(principal.0, expected);
+        assert_eq!(principal.wildcards(), 1);
     }
 }
