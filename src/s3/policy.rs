@@ -4,69 +4,11 @@ use rusoto_s3::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
 
+mod actions;
+use actions::*;
+
 const CLOUDFRONT_OAI: &str = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ";
 const WILDCARD: &str = "*";
-
-#[derive(Debug, Default)]
-struct Action(Vec<String>);
-
-impl Action {
-    fn append(&mut self, mut other: Self) {
-        self.0.append(&mut other.0);
-    }
-
-    fn wildcards(&self) -> usize {
-        // Wildcards could appear anywhere in the ARN
-        // eg. "*", "s3:*", "iam:*AccessKey*"
-        self.0.iter()
-            .filter(|&arn| arn.contains(WILDCARD))
-            .count()
-    }
-}
-
-#[cfg(test)]
-impl PartialEq for Action {
-    fn eq(&self, other: &Self) -> bool {
-        let mut first = self.0.clone();
-        first.sort();
-
-        let mut second = other.0.clone();
-        second.sort();
-
-        first == second
-    }
-}
-
-// Takes a Value representing the Principal entry in a Bucket Policy and
-// returns a Vec of the discovered ARNs wrapped in a Principal struct.
-impl From<&Value> for Action {
-    fn from(value: &Value) -> Self {
-        let output = match value {
-            // "Action": "s3:Foo"
-            Value::String(arn) => {
-                let arns = vec![
-                    String::from(arn),
-                ];
-
-                Self(arns)
-            },
-            // "Action": [
-            //   "s3:Bar",
-            //   "s3:Foo",
-            // ]
-            Value::Array(actions) => {
-                let actions: Vec<String> = actions.iter()
-                    .map(|s| String::from(s.as_str().unwrap()))
-                    .collect();
-
-                Self(actions)
-            },
-            _ => Self(Vec::new()),
-        };
-
-        output
-    }
-}
 
 #[derive(Debug)]
 pub struct CloudFrontDistributions(usize);
