@@ -4,19 +4,17 @@ use rusoto_s3::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
 
+const CLOUDFRONT_OAI: &str = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ";
 const WILDCARD: &str = "*";
 
-#[derive(Debug, PartialEq)]
-pub enum BucketPolicy {
-    None,
-    NoWildcards,
-    Wildcards(usize),
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Action(Vec<String>);
 
 impl Action {
+    fn append(&mut self, mut other: Self) {
+        self.0.append(&mut other.0);
+    }
+
     fn wildcards(&self) -> usize {
         // Wildcards could appear anywhere in the ARN
         // eg. "*", "s3:*", "iam:*AccessKey*"
@@ -71,9 +69,55 @@ impl From<&Value> for Action {
 }
 
 #[derive(Debug)]
+pub struct CloudFrontDistributions(usize);
+
+impl fmt::Display for CloudFrontDistributions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let num = self.0;
+
+        if num == 0 {
+            let emoji = Emoji::Tick;
+
+            write!(
+                f,
+                "{} Bucket is not associated with any CloudFront distributions",
+                emoji,
+            )
+        }
+        else {
+            let emoji = Emoji::Cross;
+            let maybe_plural = if num > 1 {
+                "s"
+            }
+            else {
+                ""
+            };
+
+            write!(
+                f,
+                "{} Bucket is associated with {} CloudFront distributions{}",
+                emoji,
+                num,
+                maybe_plural,
+            )
+        }
+    }
+}
+
+#[derive(Debug, Default)]
 struct Principal(Vec<String>);
 
 impl Principal {
+    fn append(&mut self, mut other: Self) {
+        self.0.append(&mut other.0);
+    }
+
+    fn cloudfront_distributions(&self) -> usize {
+        self.0.iter()
+            .filter(|&arn| arn.starts_with(CLOUDFRONT_OAI))
+            .count()
+    }
+
     fn wildcards(&self) -> usize {
         self.0.iter()
             .filter(|&arn| arn == WILDCARD)
@@ -134,10 +178,75 @@ impl From<&Value> for Principal {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct Wildcards(usize);
+
+impl Wildcards {
+    fn add(&mut self, count: usize) {
+        self.0 += count;
+    }
+}
+
+impl fmt::Display for Wildcards {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let num = self.0;
+
+        if num == 0 {
+            let emoji = Emoji::Tick;
+
+            write!(
+                f,
+                "{} Bucket policy doesn't allow a wildcard entity",
+                emoji,
+            )
+        }
+        else {
+            let emoji = Emoji::Cross;
+            let maybe_plural = if num > 1 {
+                "s"
+            }
+            else {
+                ""
+            };
+
+            write!(
+                f,
+                "{} Bucket has {} statement{} with wildcard entities",
+                emoji,
+                num,
+                maybe_plural,
+            )
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct BucketPolicy {
+    actions: Action,
+    principals: Principal,
+}
+
+impl BucketPolicy {
+    pub fn cloudfront_distributions(&self) -> CloudFrontDistributions {
+        CloudFrontDistributions(self.principals.cloudfront_distributions())
+    }
+
+    pub fn wildcards(&self) -> Wildcards {
+        let mut wildcards: Wildcards = Default::default();
+
+        wildcards.add(self.actions.wildcards());
+        wildcards.add(self.principals.wildcards());
+
+        wildcards
+    }
+}
+
 impl From<GetBucketPolicyOutput> for BucketPolicy {
     fn from(output: GetBucketPolicyOutput) -> Self {
+        let mut bucket_policy: Self = Default::default();
+
         if output.policy.is_none() {
-            return Self::None;
+            return bucket_policy;
         }
 
         // We already checked if the policy exists, unwrap should be fine
@@ -150,7 +259,9 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         // The policy will contain an array of statements.
         let statements = &jv["Statement"];
 
-        let mut wildcard_statements_total: usize = 0;
+        //let mut wildcard_statements_total: usize = 0;
+        let mut actions: Action = Default::default();
+        let mut principals: Principal = Default::default();
 
         for statement in statements.as_array().unwrap().iter() {
             // Policies MUST have an effect. This should be safe.
@@ -165,61 +276,17 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
             // Process the actions.
             let action = &statement["Action"];
             let action: Action = action.into();
-            let action_wildcards = action.wildcards();
-
-            wildcard_statements_total += action_wildcards;
+            actions.append(action);
 
             // Process the principals.
             let principal = &statement["Principal"];
             let principal: Principal = principal.into();
-            let principal_wildcards = principal.wildcards();
-
-            wildcard_statements_total += principal_wildcards;
+            principals.append(principal);
         }
 
-        if wildcard_statements_total == 0 {
-            return Self::NoWildcards;
-        }
-
-        Self::Wildcards(wildcard_statements_total)
-    }
-}
-
-impl fmt::Display for BucketPolicy {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let output = match *self {
-            Self::None => {
-                let emoji = Emoji::Warning;
-
-                format!("{} Bucket has no policy set", emoji)
-            },
-            Self::NoWildcards => {
-                let emoji = Emoji::Tick;
-
-                format!(
-                    "{} Bucket policy doesn't allow a wildcard entity",
-                    emoji,
-                )
-            },
-            Self::Wildcards(num) => {
-                let emoji = Emoji::Cross;
-                let maybe_plural = if num as usize > 1 {
-                    "s"
-                }
-                else {
-                    ""
-                };
-
-                format!(
-                    "{} Bucket has {} statement{} with wildcard entities",
-                    emoji,
-                    num,
-                    maybe_plural,
-                )
-            },
-        };
-
-        write!(f, "{}", output)
+        bucket_policy.actions = actions;
+        bucket_policy.principals = principals;
+        bucket_policy
     }
 }
 

@@ -157,7 +157,8 @@ impl Client {
 
         // Bucket policy
         let bucket_policy = self.get_bucket_policy(bucket).await?;
-        println!("    {}", bucket_policy);
+        println!("    {}", bucket_policy.wildcards());
+        println!("    {}", bucket_policy.cloudfront_distributions());
 
         // Bucket ACL
         let bucket_acl = self.get_bucket_acl(bucket).await?;
