@@ -1,12 +1,12 @@
 ---
-name: 'Create Github Release'
+name: 'Create GitHub Release'
 on:
   push:
     tags:
       - 'v*'
 jobs:
   release:
-    name: 'Create Github Release'
+    name: 'Create GitHub Release'
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout'
