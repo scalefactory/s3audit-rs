@@ -10,6 +10,8 @@ use crate::s3::{
     website::BucketWebsite,
 };
 use anyhow::Result;
+use atty::Stream;
+use colored::*;
 use rusoto_core::Region;
 use rusoto_s3::{
     GetBucketAclRequest,
@@ -22,9 +24,15 @@ use rusoto_s3::{
     S3,
     S3Client,
 };
+use std::env;
 
 pub struct Client {
     client: S3Client,
+}
+
+#[derive(Default)]
+pub struct ReportOptions {
+    coloured_output: bool,
 }
 
 impl Client {
@@ -131,8 +139,15 @@ impl Client {
     }
 
     // Reports on a single bucket
-    pub async fn report(&self, bucket: &str) -> Result<()> {
-        println!("  {} {}", Emoji::Arrow, bucket);
+    pub async fn report(&self, bucket: &str, options: &ReportOptions) -> Result<()> {
+
+        // Highlight bucket name if appropriate
+        let bucket_name_optionally_coloured = match options.coloured_output {
+            true => bucket.bold().blue().to_string(),
+            _ => bucket.to_string(),
+        };
+
+        println!("  {} {}", Emoji::Arrow, &bucket_name_optionally_coloured);
 
         // Public access configuration
         println!("    {} Bucket public access configuration", Emoji::Arrow);
@@ -171,12 +186,35 @@ impl Client {
         Ok(())
     }
 
+    fn should_colour_output(&self) -> Result<bool> {
+        if ! atty::is(Stream::Stdout) {
+          // STDOUT is not a pseudoterminal
+          return Ok(false);
+        }
+
+        match env::var("TERM") {
+          Err(_) => {
+            // not sure about terminal type; play safe
+            Ok(false)
+          },
+          Ok(termtype) => {
+            // Use colour unless dumb terminal detected
+            Ok(termtype != "dumb".as_ref())
+          },
+        }
+    }
+
+
     // Reports on all discovered buckets
     pub async fn report_all(&self) -> Result<()> {
         let buckets = self.list_buckets().await?;
 
+        let mut options: ReportOptions = Default::default();
+        // Use coloured output
+        options.coloured_output = self.should_colour_output()?;
+
         for bucket in buckets.iter() {
-            self.report(&bucket).await?;
+            self.report(&bucket,&options).await?;
         }
 
         Ok(())
