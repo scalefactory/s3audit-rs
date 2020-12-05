@@ -111,10 +111,8 @@ impl BucketPolicy {
 
 impl From<GetBucketPolicyOutput> for BucketPolicy {
     fn from(output: GetBucketPolicyOutput) -> Self {
-        let mut bucket_policy: Self = Default::default();
-
         if output.policy.is_none() {
-            return bucket_policy;
+            return Default::default();
         }
 
         // We already checked if the policy exists, unwrap should be fine
@@ -127,7 +125,6 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         // The policy will contain an array of statements.
         let statements = &jv["Statement"];
 
-        //let mut wildcard_statements_total: usize = 0;
         let mut actions: Action = Default::default();
         let mut principals: Principal = Default::default();
 
@@ -152,9 +149,10 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
             principals.append(principal);
         }
 
-        bucket_policy.actions = actions;
-        bucket_policy.principals = principals;
-        bucket_policy
+        Self {
+            actions: actions,
+            principals: principals,
+        }
     }
 }
 
