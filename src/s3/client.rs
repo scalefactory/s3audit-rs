@@ -1,13 +1,13 @@
 // S3 client implementation
 use crate::common::Emoji;
 use crate::s3::{
-    bucket_acl::BucketAcl,
-    bucket_encryption::BucketEncryption,
-    bucket_logging::BucketLogging,
-    bucket_policy::BucketPolicy,
-    bucket_versioning::BucketVersioning,
-    bucket_website::BucketWebsite,
+    acl::BucketAcl,
+    encryption::BucketEncryption,
+    logging::BucketLogging,
+    policy::BucketPolicy,
     public_access_block::PublicAccessBlock,
+    versioning::BucketVersioning,
+    website::BucketWebsite,
 };
 use anyhow::Result;
 use rusoto_core::Region;
