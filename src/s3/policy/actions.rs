@@ -12,10 +12,10 @@ impl Action {
     }
 
     pub fn wildcards(&self) -> usize {
-        // Wildcards could appear anywhere in the ARN
+        // Wildcards could appear anywhere in the name
         // eg. "*", "s3:*", "iam:*AccessKey*"
         self.0.iter()
-            .filter(|&arn| arn.contains(WILDCARD))
+            .filter(|&name| name.contains(WILDCARD))
             .count()
     }
 }
@@ -33,18 +33,18 @@ impl PartialEq for Action {
     }
 }
 
-// Takes a Value representing the Principal entry in a Bucket Policy and
-// returns a Vec of the discovered ARNs wrapped in a Principal struct.
+// Takes a Value representing the Action entry in a Bucket Policy and
+// returns a Vec of the discovered names wrapped in an Action struct.
 impl From<&Value> for Action {
     fn from(value: &Value) -> Self {
         let output = match value {
             // "Action": "s3:Foo"
-            Value::String(arn) => {
-                let arns = vec![
-                    String::from(arn),
+            Value::String(action) => {
+                let actions = vec![
+                    String::from(action),
                 ];
 
-                Self(arns)
+                Self(actions)
             },
             // "Action": [
             //   "s3:Bar",
