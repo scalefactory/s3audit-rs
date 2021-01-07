@@ -105,6 +105,7 @@ mod tests {
 
         let server_side_encryption_rule = ServerSideEncryptionRule {
             apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+            ..Default::default()
         };
 
         let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
@@ -131,6 +132,7 @@ mod tests {
 
         let server_side_encryption_rule = ServerSideEncryptionRule {
             apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+            ..Default::default()
         };
 
         let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
@@ -157,6 +159,7 @@ mod tests {
 
         let server_side_encryption_rule = ServerSideEncryptionRule {
             apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
+            ..Default::default()
         };
 
         let server_side_encryption_configuration = ServerSideEncryptionConfiguration {

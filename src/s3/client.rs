@@ -62,6 +62,7 @@ impl Client {
     async fn get_bucket_acl(&self, bucket: &str) -> Result<BucketAcl> {
         let input = GetBucketAclRequest {
             bucket: bucket.into(),
+            ..Default::default()
         };
 
         let output = self.client.get_bucket_acl(input).await?;
@@ -73,6 +74,7 @@ impl Client {
     async fn get_bucket_encryption(&self, bucket: &str) -> Result<BucketEncryption> {
         let input = GetBucketEncryptionRequest {
             bucket: bucket.to_owned(),
+            ..Default::default()
         };
 
         let output = self.client.get_bucket_encryption(input).await;
@@ -84,6 +86,7 @@ impl Client {
     async fn get_bucket_logging(&self, bucket: &str) -> Result<BucketLogging> {
         let input = GetBucketLoggingRequest {
             bucket: bucket.into(),
+            ..Default::default()
         };
 
         let output = self.client.get_bucket_logging(input).await?;
@@ -95,6 +98,7 @@ impl Client {
     async fn get_bucket_policy(&self, bucket: &str) -> Result<BucketPolicy> {
         let input = GetBucketPolicyRequest {
             bucket: bucket.into(),
+            ..Default::default()
         };
 
         let output = self.client.get_bucket_policy(input).await?;
@@ -106,6 +110,7 @@ impl Client {
     async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
         let input = GetBucketVersioningRequest {
             bucket: bucket.into(),
+            ..Default::default()
         };
 
         let output = self.client.get_bucket_versioning(input).await?;
@@ -117,6 +122,7 @@ impl Client {
     async fn get_bucket_website(&self, bucket: &str) -> Result<BucketWebsite> {
         let input = GetBucketWebsiteRequest {
             bucket: bucket.into(),
+            ..Default::default()
         };
 
         // Note that we aren't using the `?` operator here.
@@ -130,6 +136,7 @@ impl Client {
     async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
         let input = GetPublicAccessBlockRequest {
             bucket: bucket.to_owned(),
+            ..Default::default()
         };
 
         let output = self.client.get_public_access_block(input).await?;
