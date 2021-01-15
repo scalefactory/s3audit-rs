@@ -1,8 +1,10 @@
 // Checks if S3 policies allow wildcard entities.
+use anyhow::{anyhow, Result};
 use crate::common::Emoji;
 use rusoto_s3::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
+use std::convert::TryFrom;
 
 mod actions;
 mod principals;
@@ -109,18 +111,22 @@ impl BucketPolicy {
     }
 }
 
-impl From<GetBucketPolicyOutput> for BucketPolicy {
-    fn from(output: GetBucketPolicyOutput) -> Self {
-        if output.policy.is_none() {
-            return Default::default();
-        }
+impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
+    type Error = anyhow::Error;
 
-        // We already checked if the policy exists, unwrap should be fine
-        let policy = output.policy.unwrap();
+    fn try_from(output: GetBucketPolicyOutput) -> Result<Self, Self::Error> {
+        // Caller must have checked that the policy exists; fail otherwise
+        let policy = match output.policy {
+            None => {
+                return Err(anyhow!("Invalid bucket policy"))
+            },
+            Some(policy_string) => {
+                policy_string
+            }
+        };
 
-        // We expect that AWS will always give us a wellformed JSON policy
-        let jv: Value = serde_json::from_str(&policy)
-            .expect("Invalid JSON from AWS");
+        // We expect that AWS will always give us a well formed JSON policy
+        let jv: Value = serde_json::from_str(&policy)?;
 
         // The policy will contain an array of statements.
         let statements = &jv["Statement"];
@@ -128,9 +134,13 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
         let mut actions: Action = Default::default();
         let mut principals: Principal = Default::default();
 
-        for statement in statements.as_array().unwrap().iter() {
-            // Policies MUST have an effect. This should be safe.
-            let effect = statement["Effect"].as_str().unwrap();
+        let statements_array = statements.as_array()
+            .expect("Bucket policy has no Statements element");
+
+        for statement in statements_array.iter() {
+            // Policies MUST have an effect. This should never fail.
+            let effect = statement["Effect"].as_str()
+                .expect("Bucket policy statement does not have an explicit Effect");
 
             // If we're denying stuff, wildcards are fine and we can proceed
             // to the next statement.
@@ -149,10 +159,25 @@ impl From<GetBucketPolicyOutput> for BucketPolicy {
             principals.append(principal);
         }
 
-        Self {
+        Ok(Self {
             actions: actions,
             principals: principals,
-        }
+        })
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct NoBucketPolicy {
+}
+
+
+impl fmt::Display for NoBucketPolicy {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} No bucket policy set",
+            Emoji::Info,
+        )
     }
 }
 

@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Emoji {
     Arrow,
     Cross,
+    Info,
     Tick,
     Warning,
 }
@@ -11,10 +12,11 @@ pub enum Emoji {
 impl fmt::Display for Emoji {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let symbol = match *self {
-        Self::Arrow => "❯",
-        Self::Cross => "✖",
-        Self::Tick => "✔",
-        Self::Warning => "⚠️",
+        Self::Arrow => " ❯",
+        Self::Cross => " ✖",
+        Self::Info => "🛈 ",
+        Self::Tick => " ✔",
+        Self::Warning => "⚠️ ",
     };
 
     write!(f, "{}", symbol)

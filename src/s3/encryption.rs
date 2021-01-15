@@ -59,7 +59,7 @@ impl fmt::Display for BucketEncryption {
             Self::Default => {
                 format!(
                     "{} Server side encryption enabled using the default AES256 algorithm",
-                    Emoji::Warning,
+                    Emoji::Info,
                 )
             },
             Self::KMS => {

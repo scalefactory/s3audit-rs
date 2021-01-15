@@ -5,6 +5,7 @@ use crate::s3::{
     encryption::BucketEncryption,
     logging::BucketLogging,
     policy::BucketPolicy,
+    policy::NoBucketPolicy,
     public_access_block::PublicAccessBlock,
     versioning::BucketVersioning,
     website::BucketWebsite,
@@ -12,7 +13,7 @@ use crate::s3::{
 use anyhow::Result;
 use atty::Stream;
 use colored::*;
-use rusoto_core::Region;
+use rusoto_core::{Region, RusotoError};
 use rusoto_s3::{
     GetBucketAclRequest,
     GetBucketEncryptionRequest,
@@ -24,6 +25,7 @@ use rusoto_s3::{
     S3,
     S3Client,
 };
+use std::convert::TryInto;
 use std::env;
 
 pub struct Client {
@@ -95,16 +97,33 @@ impl Client {
         Ok(config)
     }
 
-    async fn get_bucket_policy(&self, bucket: &str) -> Result<BucketPolicy> {
+    async fn get_bucket_policy(&self, bucket: &str) -> Result<Option<BucketPolicy>> {
         let input = GetBucketPolicyRequest {
             bucket: bucket.into(),
             ..Default::default()
         };
 
-        let output = self.client.get_bucket_policy(input).await?;
-        let config: BucketPolicy = output.into();
+        let output = match self.client.get_bucket_policy(input).await {
+            Ok(item) => Ok(item),
+            Err(RusotoError::Unknown(response)) => {
+                if response.status == 404 {
+                    return Ok(None) // there's no bucket policy; not an error
+                } else {
+                    Err(RusotoError::Unknown(response))
+                }
+            }
+            Err(error) => {
+                Err(error)
+            }
+        }?;
 
-        Ok(config)
+        // Didn't get 404 but no policy supplied
+        if output.policy.is_none() {
+            return Ok(None);
+        }
+
+        let bucket_policy = TryInto::<BucketPolicy>::try_into(output)?;
+        Ok(Some(bucket_policy))
     }
 
     async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
@@ -178,9 +197,15 @@ impl Client {
         println!("    {}", bucket_website);
 
         // Bucket policy
-        let bucket_policy = self.get_bucket_policy(bucket).await?;
-        println!("    {}", bucket_policy.wildcards());
-        println!("    {}", bucket_policy.cloudfront_distributions());
+        match self.get_bucket_policy(bucket).await? {
+            None => {
+                println!("    {}", NoBucketPolicy { });
+            },
+            Some(policy) => {
+                println!("    {}", policy.wildcards());
+                println!("    {}", policy.cloudfront_distributions());
+            }
+        }
 
         // Bucket ACL
         let bucket_acl = self.get_bucket_acl(bucket).await?;
