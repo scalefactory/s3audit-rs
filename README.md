@@ -20,3 +20,7 @@ be dual licensed as above, without any additional terms or conditions.
 <!-- links -->
 [LICENSE-APACHE]: LICENSE-APACHE
 [LICENSE-MIT]: LICENSE-MIT
+
+## Minimum supported Rust version
+
+v1.45.0
