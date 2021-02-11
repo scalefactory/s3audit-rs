@@ -218,21 +218,21 @@ impl Client {
         Ok(())
     }
 
-    fn should_colour_output(&self) -> Result<bool> {
-        if ! atty::is(Stream::Stdout) {
-          // STDOUT is not a pseudoterminal
-          return Ok(false);
+    fn should_colour_output(&self) -> bool {
+        if !atty::is(Stream::Stdout) {
+            // STDOUT is not a pseudoterminal
+            return false;
         }
 
         match env::var("TERM") {
-          Err(_) => {
-            // not sure about terminal type; play safe
-            Ok(false)
-          },
-          Ok(termtype) => {
-            // Use colour unless dumb terminal detected
-            Ok(termtype != "dumb".as_ref())
-          },
+            Err(_) => {
+                // Not sure about terminal type; play safe
+                false
+            },
+            Ok(termtype) => {
+                // Use colour unless dumb terminal detected
+                termtype != "dumb"
+            },
         }
     }
 
@@ -241,12 +241,13 @@ impl Client {
     pub async fn report_all(&self) -> Result<()> {
         let buckets = self.list_buckets().await?;
 
-        let mut options: ReportOptions = Default::default();
-        // Use coloured output
-        options.coloured_output = self.should_colour_output()?;
+        let options = ReportOptions {
+            // Use coloured output
+            coloured_output: self.should_colour_output(),
+        };
 
         for bucket in buckets.iter() {
-            self.report(&bucket,&options).await?;
+            self.report(&bucket, &options).await?;
         }
 
         Ok(())
