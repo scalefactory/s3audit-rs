@@ -223,6 +223,13 @@ impl Client {
             return false;
         }
 
+        // Respect NO_COLOR environment variable
+        // https://no-color.org/
+        // If the variable is present, disable colour regardless of the value
+        if env::var("NO_COLOR").is_ok() {
+            return false;
+        }
+
         match env::var("TERM") {
             Err(_) => {
                 // Not sure about terminal type; play safe
@@ -234,7 +241,6 @@ impl Client {
             },
         }
     }
-
 
     // Reports on all discovered buckets
     pub async fn report_all(&self) -> Result<()> {
