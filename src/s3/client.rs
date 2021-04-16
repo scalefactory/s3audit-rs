@@ -122,7 +122,7 @@ impl Client {
             return Ok(None);
         }
 
-        let bucket_policy = TryInto::<BucketPolicy>::try_into(output)?;
+        let bucket_policy: BucketPolicy = output.try_into()?;
         Ok(Some(bucket_policy))
     }
 
