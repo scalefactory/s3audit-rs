@@ -50,7 +50,7 @@ default-features = false
 features = ["rustls"]
 
 [dev-dependencies]
-pretty_assertions = "0.6"
+pretty_assertions = "0.7"
 
 [dev-dependencies.rusoto_mock]
 version = "0.46.0"
