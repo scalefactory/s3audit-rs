@@ -39,7 +39,7 @@ impl fmt::Display for CloudFrontDistributions {
 
             write!(
                 f,
-                "{} Bucket is associated with {} CloudFront distributions{}",
+                "{} Bucket is associated with {} CloudFront distribution{}",
                 emoji,
                 num,
                 maybe_plural,
