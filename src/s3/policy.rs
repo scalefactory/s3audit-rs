@@ -174,11 +174,7 @@ pub struct NoBucketPolicy;
 
 impl fmt::Display for NoBucketPolicy {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} No bucket policy set",
-            Emoji::Info,
-        )
+        write!(f, "{} No bucket policy set", Emoji::Info)
     }
 }
 

@@ -166,7 +166,6 @@ impl Client {
 
     // Reports on a single bucket
     pub async fn report(&self, bucket: &str, options: &ReportOptions) -> Result<()> {
-
         // Highlight bucket name if appropriate
         let bucket_name_optionally_coloured = match options.coloured_output {
             true => bucket.bold().blue().to_string(),
