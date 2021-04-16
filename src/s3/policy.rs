@@ -1,5 +1,8 @@
 // Checks if S3 policies allow wildcard entities.
-use anyhow::{anyhow, Result};
+use anyhow::{
+    anyhow,
+    Result,
+};
 use crate::common::Emoji;
 use rusoto_s3::GetBucketPolicyOutput;
 use serde_json::Value;
@@ -12,7 +15,7 @@ mod principals;
 use actions::*;
 use principals::*;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CloudFrontDistributions(usize);
 
 impl fmt::Display for CloudFrontDistributions {
@@ -48,7 +51,7 @@ impl fmt::Display for CloudFrontDistributions {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Wildcards(usize);
 
 impl Wildcards {
@@ -167,9 +170,7 @@ impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
 }
 
 #[derive(Debug, Default)]
-pub struct NoBucketPolicy {
-}
-
+pub struct NoBucketPolicy;
 
 impl fmt::Display for NoBucketPolicy {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -186,4 +187,188 @@ mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
     use serde_json::json;
+    use std::convert::TryInto;
+
+    fn policy(value: Option<serde_json::Value>) -> BucketPolicy {
+        let policy = match value {
+            None         => None,
+            Some(policy) => Some(policy.to_string()),
+        };
+
+        let output = GetBucketPolicyOutput {
+            policy: policy,
+        };
+
+        let policy: BucketPolicy = output.try_into().unwrap();
+
+        policy
+    }
+
+    #[test]
+    fn test_policy_deny_wildcard_actions_and_principals() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Deny",
+                    "Action": [
+                        "s3:*",
+                        "s3:*Object*",
+                        "*",
+                    ],
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "AWS": [
+                            // This ARN is invalid here, ensuring we don't
+                            // count it.
+                            "arn:aws:iam::*:user/*",
+                            "*",
+                        ],
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = Wildcards(0);
+        let wildcards = policy.wildcards();
+
+        assert_eq!(wildcards, expected);
+    }
+
+    #[test]
+    fn test_policy_no_policy() {
+        let output = GetBucketPolicyOutput {
+            policy: None,
+        };
+
+        let policy = BucketPolicy::try_from(output);
+
+        assert!(policy.is_err());
+    }
+
+    #[test]
+    fn test_policy_cloudfront_no_distributions() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "AWS": "*",
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = CloudFrontDistributions(0);
+        let distributions = policy.cloudfront_distributions();
+
+        assert_eq!(distributions, expected);
+    }
+    #[test]
+    fn test_policy_cloudfront_some_distributions() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity 123456789012",
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = CloudFrontDistributions(1);
+        let distributions = policy.cloudfront_distributions();
+
+        assert_eq!(distributions, expected);
+    }
+
+    #[test]
+    fn test_policy_no_wildcard_actions() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = Wildcards(0);
+        let wildcards = policy.wildcards();
+
+        assert_eq!(wildcards, expected);
+    }
+
+    #[test]
+    fn test_policy_some_wildcard_actions_and_principals() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:*",
+                        "s3:*Object*",
+                        "*",
+                    ],
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "AWS": [
+                            // This ARN is invalid here, ensuring we don't
+                            // count it.
+                            "arn:aws:iam::*:user/*",
+                            "*",
+                        ],
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = Wildcards(4);
+        let wildcards = policy.wildcards();
+
+        assert_eq!(wildcards, expected);
+    }
+
+    #[test]
+    fn test_policy_some_wildcard_principals() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "AWS": [
+                            // This ARN is invalid here, ensuring we don't
+                            // count it.
+                            "arn:aws:iam::*:user/*",
+                            "*",
+                        ],
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = Wildcards(1);
+        let wildcards = policy.wildcards();
+
+        assert_eq!(wildcards, expected);
+    }
 }
