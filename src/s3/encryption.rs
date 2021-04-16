@@ -10,7 +10,7 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum BucketEncryption {
     Default,
-    KMS,
+    Kms,
     None,
     Unknown(String),
 }
@@ -37,7 +37,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
 
         match sse_algorithm.as_deref() {
             Some("AES256")  => Self::Default,
-            Some("aws:kms") => Self::KMS,
+            Some("aws:kms") => Self::Kms,
             Some(algorithm) => Self::Unknown(algorithm.into()),
             None            => Self::None,
         }
@@ -62,7 +62,7 @@ impl fmt::Display for BucketEncryption {
                     Emoji::Info,
                 )
             },
-            Self::KMS => {
+            Self::Kms => {
                 format!(
                     "{} Server side encryption enabled using KMS",
                     Emoji::Tick,
@@ -143,7 +143,7 @@ mod tests {
             server_side_encryption_configuration: Some(server_side_encryption_configuration),
         };
 
-        let expected = BucketEncryption::KMS;
+        let expected = BucketEncryption::Kms;
 
         let bucket_encryption: BucketEncryption = output.into();
 

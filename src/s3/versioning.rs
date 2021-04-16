@@ -4,12 +4,12 @@ use rusoto_s3::GetBucketVersioningOutput;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
-pub enum MFAStatus {
+pub enum MfaStatus {
     Enabled,
     Disabled,
 }
 
-impl From<String> for MFAStatus {
+impl From<String> for MfaStatus {
     fn from(status: String) -> Self {
         match status.as_ref() {
             "Enabled"  => Self::Enabled,
@@ -19,7 +19,7 @@ impl From<String> for MFAStatus {
     }
 }
 
-impl fmt::Display for MFAStatus {
+impl fmt::Display for MfaStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let output = match self {
             Self::Enabled => {
@@ -71,14 +71,14 @@ impl fmt::Display for VersioningStatus {
 
 #[derive(Debug, PartialEq)]
 pub struct BucketVersioning {
-    mfa_delete: MFAStatus,
+    mfa_delete: MfaStatus,
     versioning: VersioningStatus,
 }
 
 impl From<GetBucketVersioningOutput> for BucketVersioning {
     fn from(output: GetBucketVersioningOutput) -> Self {
-        let mfa_delete: MFAStatus = output.mfa_delete
-            .map_or(MFAStatus::Disabled, |mfa_delete| mfa_delete.into());
+        let mfa_delete: MfaStatus = output.mfa_delete
+            .map_or(MfaStatus::Disabled, |mfa_delete| mfa_delete.into());
 
         let versioning: VersioningStatus = output.status
             .map_or(VersioningStatus::Suspended, |status| status.into());
@@ -91,7 +91,7 @@ impl From<GetBucketVersioningOutput> for BucketVersioning {
 }
 
 impl BucketVersioning {
-    pub fn mfa_delete(&self) -> &MFAStatus {
+    pub fn mfa_delete(&self) -> &MfaStatus {
         &self.mfa_delete
     }
 
@@ -107,8 +107,8 @@ mod tests {
     #[test]
     fn test_from_for_bucket_versioning() {
         let tests = vec![
-            ("Enabled", "Enabled", MFAStatus::Enabled, VersioningStatus::Enabled),
-            ("Disabled", "Suspended", MFAStatus::Disabled, VersioningStatus::Suspended),
+            ("Enabled", "Enabled", MfaStatus::Enabled, VersioningStatus::Enabled),
+            ("Disabled", "Suspended", MfaStatus::Disabled, VersioningStatus::Suspended),
         ];
 
         for test in tests {
