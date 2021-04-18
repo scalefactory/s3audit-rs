@@ -23,4 +23,4 @@ be dual licensed as above, without any additional terms or conditions.
 
 ## Minimum supported Rust version
 
-v1.45.0
+v1.46.0
