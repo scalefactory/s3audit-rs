@@ -1,5 +1,5 @@
 // Implements a nice enum for expressing public access block status
-use crate::common::*;
+use crate::common::Emoji;
 use rusoto_s3::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
@@ -16,19 +16,19 @@ impl fmt::Display for PublicAccessBlockType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let output = match *self {
             Self::BlockPublicAcls(b) => {
-                let emoji: EmojiBool = b.into();
+                let emoji: Emoji = b.into();
                 format!("{} BlockPublicAcls is set to {}", emoji, b)
             },
             Self::BlockPublicPolicy(b) => {
-                let emoji: EmojiBool = b.into();
+                let emoji: Emoji = b.into();
                 format!("{} BlockPublicPolicy is set to {}", emoji, b)
             },
             Self::IgnorePublicAcls(b) => {
-                let emoji: EmojiBool = b.into();
+                let emoji: Emoji = b.into();
                 format!("{} IgnorePublicAcls is set to {}", emoji, b)
             },
             Self::RestrictPublicBuckets(b) => {
-                let emoji: EmojiBool = b.into();
+                let emoji: Emoji = b.into();
                 format!("{} RestrictPublicBuckets is set to {}", emoji, b)
             },
         };

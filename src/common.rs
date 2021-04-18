@@ -12,10 +12,10 @@ pub enum Emoji {
 impl fmt::Display for Emoji {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let symbol = match *self {
-        Self::Arrow => " ❯",
-        Self::Cross => " ✖",
-        Self::Info => "🛈 ",
-        Self::Tick => " ✔",
+        Self::Arrow => "❯",
+        Self::Cross => "✖",
+        Self::Info => "🛈",
+        Self::Tick => "✔",
         Self::Warning => "⚠️ ",
     };
 
@@ -23,24 +23,11 @@ impl fmt::Display for Emoji {
   }
 }
 
-// A boolean wrapper than you can Display into unicode symbols
-pub struct EmojiBool(bool);
-
-impl fmt::Display for EmojiBool {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    let item = if self.0 {
-      Emoji::Tick
+impl From<bool> for Emoji {
+    fn from(item: bool) -> Self {
+        match item {
+            true => Self::Tick,
+            _    => Self::Cross,
+        }
     }
-    else {
-      Emoji::Cross
-    };
-
-    item.fmt(f)
-  }
-}
-
-impl From<bool> for EmojiBool {
-  fn from(item: bool) -> Self {
-    Self(item)
-  }
 }
