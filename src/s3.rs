@@ -5,6 +5,7 @@ mod encryption;
 mod logging;
 mod policy;
 mod public_access_block;
+mod report;
 mod versioning;
 mod website;
 
@@ -14,5 +15,6 @@ pub use encryption::*;
 pub use logging::*;
 pub use policy::*;
 pub use public_access_block::*;
+pub use report::*;
 pub use versioning::*;
 pub use website::*;

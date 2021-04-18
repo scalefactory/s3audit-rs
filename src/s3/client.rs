@@ -1,18 +1,17 @@
 // S3 client implementation
-use crate::common::Emoji;
 use crate::s3::{
     acl::BucketAcl,
     encryption::BucketEncryption,
     logging::BucketLogging,
     policy::BucketPolicy,
-    policy::NoBucketPolicy,
     public_access_block::PublicAccessBlock,
     versioning::BucketVersioning,
     website::BucketWebsite,
+    Report,
+    ReportOptions,
 };
 use anyhow::Result;
 use atty::Stream;
-use colored::*;
 use rusoto_core::{Region, RusotoError};
 use rusoto_s3::{
     GetBucketAclRequest,
@@ -30,11 +29,6 @@ use std::env;
 
 pub struct Client {
     client: S3Client,
-}
-
-#[derive(Default)]
-pub struct ReportOptions {
-    coloured_output: bool,
 }
 
 impl Client {
@@ -165,56 +159,27 @@ impl Client {
     }
 
     // Reports on a single bucket
-    pub async fn report(&self, bucket: &str, options: &ReportOptions) -> Result<()> {
-        // Highlight bucket name if appropriate
-        let bucket_name_optionally_coloured = match options.coloured_output {
-            true => bucket.bold().blue().to_string(),
-            _ => bucket.to_string(),
+    pub async fn report(&self, bucket: &str) -> Result<Report> {
+        let acl = self.get_bucket_acl(bucket).await?;
+        let encryption = self.get_bucket_encryption(bucket).await?;
+        let logging = self.get_bucket_logging(bucket).await?;
+        let policy = self.get_bucket_policy(bucket).await?;
+        let public_access_block = self.get_public_access_block(bucket).await?;
+        let versioning = self.get_bucket_versioning(bucket).await?;
+        let website = self.get_bucket_website(bucket).await?;
+
+        let report = Report {
+            name:                bucket.into(),
+            acl:                 acl,
+            encryption:          encryption,
+            logging:             logging,
+            policy:              policy,
+            public_access_block: public_access_block,
+            versioning:          versioning,
+            website:             website,
         };
 
-        println!("  {} {}", Emoji::Arrow, &bucket_name_optionally_coloured);
-
-        // Public access configuration
-        println!("    {} Bucket public access configuration", Emoji::Arrow);
-
-        let public_access_blocks = self.get_public_access_block(bucket).await?;
-        for block in public_access_blocks.iter() {
-            println!("      {}", block);
-        }
-
-        // Bucket encryption
-        let bucket_encryption = self.get_bucket_encryption(bucket).await?;
-        println!("    {}", bucket_encryption);
-
-        // Bucket versioning and MFA delete
-        let bucket_versioning = self.get_bucket_versioning(bucket).await?;
-        println!("    {}", bucket_versioning.versioning());
-        println!("    {}", bucket_versioning.mfa_delete());
-
-        // Static website hosting
-        let bucket_website = self.get_bucket_website(bucket).await?;
-        println!("    {}", bucket_website);
-
-        // Bucket policy
-        match self.get_bucket_policy(bucket).await? {
-            None => {
-                println!("    {}", NoBucketPolicy { });
-            },
-            Some(policy) => {
-                println!("    {}", policy.wildcards());
-                println!("    {}", policy.cloudfront_distributions());
-            }
-        }
-
-        // Bucket ACL
-        let bucket_acl = self.get_bucket_acl(bucket).await?;
-        println!("    {}", bucket_acl);
-
-        // Bucket logging
-        let bucket_logging = self.get_bucket_logging(bucket).await?;
-        println!("    {}", bucket_logging);
-
-        Ok(())
+        Ok(report)
     }
 
     fn should_colour_output(&self) -> bool {
@@ -248,11 +213,13 @@ impl Client {
 
         let options = ReportOptions {
             // Use coloured output
-            coloured_output: self.should_colour_output(),
+            coloured: self.should_colour_output(),
+            ..Default::default()
         };
 
         for bucket in buckets.iter() {
-            self.report(&bucket, &options).await?;
+            let report = self.report(&bucket).await?;
+            report.output(&options);
         }
 
         Ok(())
