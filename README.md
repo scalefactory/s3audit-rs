@@ -1,5 +1,8 @@
 # S3 Audit
 
+S3 Audit is a tool that reports on various aspects of S3 buckets within an AWS
+account.
+
 ## License
 
 Licensed under either of
