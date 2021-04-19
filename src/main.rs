@@ -18,13 +18,13 @@ use s3::{
 #[derive(Debug, StructOpt)]
 #[structopt(about)]
 struct CliConfig {
-    /// Specify an AWS profile name to use
+    /// Specify a specific bucket to audit
     #[structopt(
         long,
         short,
-        value_name = "NAME",
+        value_name = "BUCKET",
     )]
-    profile: Option<String>,
+    bucket: Option<String>,
 
     /// Specify the report output format
     #[structopt(
@@ -35,6 +35,14 @@ struct CliConfig {
         value_name = "FORMAT",
     )]
     format: ReportType,
+
+    /// Specify an AWS profile name to use
+    #[structopt(
+        long,
+        short,
+        value_name = "NAME",
+    )]
+    profile: Option<String>,
 }
 
 fn should_colour_output() -> bool {
@@ -71,7 +79,7 @@ async fn main() -> Result<()> {
     }
 
     let client = s3::Client::new();
-    let reports = client.report_all().await?;
+    let reports = client.report(cli.bucket).await?;
 
     let report_options = ReportOptions {
         coloured:    should_colour_output(),

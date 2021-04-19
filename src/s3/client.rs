@@ -156,7 +156,7 @@ impl Client {
     }
 
     // Reports on a single bucket
-    pub async fn report(&self, bucket: &str) -> Result<Report> {
+    async fn bucket_report(&self, bucket: &str) -> Result<Report> {
         let acl = self.get_bucket_acl(bucket).await?;
         let encryption = self.get_bucket_encryption(bucket).await?;
         let logging = self.get_bucket_logging(bucket).await?;
@@ -180,12 +180,19 @@ impl Client {
     }
 
     // Reports on all discovered buckets
-    pub async fn report_all(&self) -> Result<Vec<Report>> {
-        let buckets = self.list_buckets().await?;
+    pub async fn report(
+        &self,
+        bucket: Option<String>,
+    ) -> Result<Vec<Report>> {
+        let buckets = match bucket {
+            None         => self.list_buckets().await?,
+            Some(bucket) => vec![bucket],
+        };
+
         let mut reports = Vec::new();
 
         for bucket in buckets.iter() {
-            let report = self.report(&bucket).await?;
+            let report = self.bucket_report(&bucket).await?;
             reports.push(report);
         }
 

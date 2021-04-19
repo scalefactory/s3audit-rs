@@ -47,7 +47,7 @@ impl FromStr for ReportType {
 
 #[derive(Debug, Default)]
 pub struct ReportOptions {
-    pub coloured: bool,
+    pub coloured:    bool,
     pub output_type: ReportType,
 }
 
