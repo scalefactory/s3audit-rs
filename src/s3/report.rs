@@ -54,29 +54,51 @@ pub struct ReportOptions {
 #[derive(Debug)]
 pub struct Report {
     pub name:                String,
-    pub acl:                 BucketAcl,
-    pub encryption:          BucketEncryption,
-    pub logging:             BucketLogging,
-    pub policy:              Option<BucketPolicy>,
-    pub public_access_block: PublicAccessBlock,
-    pub versioning:          BucketVersioning,
-    pub website:             BucketWebsite,
+    pub acl:                 Option<BucketAcl>,
+    pub encryption:          Option<BucketEncryption>,
+    pub logging:             Option<BucketLogging>,
+    pub policy:              Option<Option<BucketPolicy>>,
+    pub public_access_block: Option<PublicAccessBlock>,
+    pub versioning:          Option<BucketVersioning>,
+    pub website:             Option<BucketWebsite>,
 }
 
 #[derive(Default, Serialize)]
 struct CsvOutput {
     name: String,
-    acl: String,
-    block_public_acls: bool,
-    block_public_policy: bool,
-    encryption: Option<String>,
-    ignore_public_acls: bool,
-    logging: bool,
-    mfa_delete: bool,
-    policy_wildcard_principals: bool,
-    restrict_public_buckets: bool,
-    versioning: bool,
-    website: bool,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    acl: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    block_public_acls: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    block_public_policy: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    encryption: Option<Option<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ignore_public_acls: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    logging: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mfa_delete: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    policy_wildcard_principals: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    restrict_public_buckets: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    versioning: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    website: Option<bool>,
 }
 
 impl From<&Report> for CsvOutput {
@@ -88,60 +110,115 @@ impl From<&Report> for CsvOutput {
         };
 
         // ACL
-        output.acl = match &report.acl {
-            BucketAcl::Private => "private".into(),
-            BucketAcl::Public  => "public".into(),
+        output.acl = if let Some(acl) = &report.acl {
+            let acl = match &acl {
+                BucketAcl::Private => "private".into(),
+                BucketAcl::Public  => "public".into(),
+            };
+
+            Some(acl)
+        }
+        else {
+            None
         };
 
         // Encryption
-        output.encryption = match &report.encryption {
-            BucketEncryption::Default    => Some("AES256".into()),
-            BucketEncryption::Kms        => Some("aws:kms".into()),
-            BucketEncryption::None       => Some("None".into()),
-            BucketEncryption::Unknown(s) => Some(s.into()),
+        output.encryption = if let Some(encryption) = &report.encryption {
+            let encryption = match &encryption {
+                BucketEncryption::Default    => Some("AES256".into()),
+                BucketEncryption::Kms        => Some("aws:kms".into()),
+                BucketEncryption::None       => Some("None".into()),
+                BucketEncryption::Unknown(s) => Some(s.into()),
+            };
+
+            Some(encryption)
+        }
+        else {
+            None
         };
 
         // Logging
-        output.logging = matches!(&report.logging, BucketLogging::Enabled(_));
+        output.logging = if let Some(logging) = &report.logging {
+            let logging = matches!(&logging, BucketLogging::Enabled(_));
+            Some(logging)
+        }
+        else {
+            None
+        };
 
         // MFA Delete
-        output.mfa_delete = matches!(
-            report.versioning.mfa_delete(),
-            MfaStatus::Enabled,
-        );
+        output.mfa_delete = if let Some(versioning) = &report.versioning {
+            let mfa_delete = matches!(
+                versioning.mfa_delete(),
+                MfaStatus::Enabled,
+            );
+
+            Some(mfa_delete)
+        }
+        else {
+            None
+        };
 
         // Policy wildcards
-        output.policy_wildcard_principals = match &report.policy {
-            None         => false,
-            Some(policy) => policy.wildcards().count() > 0,
+        output.policy_wildcard_principals = if let Some(policy) = &report.policy {
+            let policy = match &policy {
+                None         => false,
+                Some(policy) => policy.wildcards().count() > 0,
+            };
+
+            Some(policy)
+        }
+        else {
+            None
         };
 
         // Public access blocks
-        for block in report.public_access_block.iter() {
-            match block {
-                PublicAccessBlockType::BlockPublicAcls(b) => {
-                    output.block_public_acls = *b
-                },
-                PublicAccessBlockType::BlockPublicPolicy(b) => {
-                    output.block_public_policy = *b
-                },
-                PublicAccessBlockType::IgnorePublicAcls(b) => {
-                    output.ignore_public_acls = *b
-                },
-                PublicAccessBlockType::RestrictPublicBuckets(b) => {
-                    output.restrict_public_buckets = *b
-                },
+        if let Some(blocks) = &report.public_access_block {
+            for block in blocks.iter() {
+                match block {
+                    PublicAccessBlockType::BlockPublicAcls(b) => {
+                        output.block_public_acls = Some(*b)
+                    },
+                    PublicAccessBlockType::BlockPublicPolicy(b) => {
+                        output.block_public_policy = Some(*b)
+                    },
+                    PublicAccessBlockType::IgnorePublicAcls(b) => {
+                        output.ignore_public_acls = Some(*b)
+                    },
+                    PublicAccessBlockType::RestrictPublicBuckets(b) => {
+                        output.restrict_public_buckets = Some(*b)
+                    },
+                }
             }
+        }
+        else {
+            output.block_public_acls       = None;
+            output.block_public_policy     = None;
+            output.ignore_public_acls      = None;
+            output.restrict_public_buckets = None;
         }
 
         // Versioning
-        output.versioning = matches!(
-            report.versioning.versioning(),
-            VersioningStatus::Enabled,
-        );
+        output.versioning = if let Some(versioning) = &report.versioning {
+            let versioning = matches!(
+                versioning.versioning(),
+                VersioningStatus::Enabled,
+            );
+
+            Some(versioning)
+        }
+        else {
+            None
+        };
 
         // Website
-        output.website = matches!(&report.website, BucketWebsite::Enabled);
+        output.website = if let Some(website) = &report.website {
+            let website = matches!(&website, BucketWebsite::Enabled);
+            Some(website)
+        }
+        else {
+            None
+        };
 
         output
     }
@@ -178,37 +255,51 @@ impl Report {
         println!("  {} {}", Emoji::Arrow, &name);
 
         // Public access configuration
-        println!("    {} Bucket public access configuration", Emoji::Arrow);
+        if let Some(blocks) = &self.public_access_block {
+            println!("    {} Bucket public access configuration", Emoji::Arrow);
 
-        for block in self.public_access_block.iter() {
-            println!("      {}", block);
+            for block in blocks.iter() {
+                println!("      {}", block);
+            }
         }
 
         // Encryption
-        println!("    {}", self.encryption);
+        if let Some(encryption) = &self.encryption {
+            println!("    {}", encryption);
+        }
 
         // Versioning and MFA Delete
-        println!("    {}", self.versioning.versioning());
-        println!("    {}", self.versioning.mfa_delete());
+        if let Some(versioning) = &self.versioning {
+            println!("    {}", versioning.versioning());
+            println!("    {}", versioning.mfa_delete());
+        }
 
         // Static website hosting
-        println!("    {}", self.website);
+        if let Some(website) = &self.website {
+            println!("    {}", website);
+        }
 
         // Bucket policy
-        match &self.policy {
-            None => {
-                println!("    {}", NoBucketPolicy { })
-            },
-            Some(policy) => {
-                println!("    {}", policy.wildcards());
-                println!("    {}", policy.cloudfront_distributions());
-            },
+        if let Some(policy) = &self.policy {
+            match &policy {
+                None => {
+                    println!("    {}", NoBucketPolicy { })
+                },
+                Some(policy) => {
+                    println!("    {}", policy.wildcards());
+                    println!("    {}", policy.cloudfront_distributions());
+                },
+            }
         }
 
         // Bucket ACL
-        println!("    {}", self.acl);
+        if let Some(acl) = &self.acl {
+            println!("    {}", acl);
+        }
 
         // Bucket logging
-        println!("    {}", self.logging);
+        if let Some(logging) = &self.logging {
+            println!("    {}", logging);
+        }
     }
 }

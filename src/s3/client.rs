@@ -162,13 +162,61 @@ impl Client {
         bucket: &str,
         audits: &[Audit],
     ) -> Result<Report> {
-        let acl = self.get_bucket_acl(bucket).await?;
-        let encryption = self.get_bucket_encryption(bucket).await?;
-        let logging = self.get_bucket_logging(bucket).await?;
-        let policy = self.get_bucket_policy(bucket).await?;
-        let public_access_block = self.get_public_access_block(bucket).await?;
-        let versioning = self.get_bucket_versioning(bucket).await?;
-        let website = self.get_bucket_website(bucket).await?;
+        let acl = if audits.contains(&Audit::Acl) {
+            let resp = self.get_bucket_acl(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let encryption = if audits.contains(&Audit::ServerSideEncryption) {
+            let resp = self.get_bucket_encryption(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let logging = if audits.contains(&Audit::Logging) {
+            let resp = self.get_bucket_logging(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let policy = if audits.contains(&Audit::Policy) {
+            let resp = self.get_bucket_policy(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let public_access_block = if audits.contains(&Audit::PublicAccessBlocks) {
+            let resp = self.get_public_access_block(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let versioning = if audits.contains(&Audit::Versioning) {
+            let resp = self.get_bucket_versioning(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
+
+        let website = if audits.contains(&Audit::Website) {
+            let resp = self.get_bucket_website(bucket).await?;
+            Some(resp)
+        }
+        else {
+            None
+        };
 
         let report = Report {
             name:                bucket.into(),
