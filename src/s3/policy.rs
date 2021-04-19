@@ -58,6 +58,10 @@ impl Wildcards {
     fn add(&mut self, count: usize) {
         self.0 += count;
     }
+
+    pub fn count(&self) -> usize {
+        self.0
+    }
 }
 
 impl fmt::Display for Wildcards {

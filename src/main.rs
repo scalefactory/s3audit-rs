@@ -3,6 +3,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
+use atty::Stream;
 use clap::{
     crate_description,
     crate_name,
@@ -14,6 +15,36 @@ use std::env;
 
 mod common;
 mod s3;
+
+use s3::{
+    ReportOptions,
+    ReportType,
+};
+
+fn should_colour_output() -> bool {
+    if !atty::is(Stream::Stdout) {
+        // STDOUT is not a pseudoterminal
+        return false;
+    }
+
+    // Respect NO_COLOR environment variable
+    // https://no-color.org/
+    // If the variable is present, disable colour regardless of the value
+    if env::var("NO_COLOR").is_ok() {
+        return false;
+    }
+
+    match env::var("TERM") {
+        Err(_) => {
+            // Not sure about terminal type; play safe
+            false
+        },
+        Ok(termtype) => {
+            // Use colour unless dumb terminal detected
+            termtype != "dumb"
+        },
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,8 +61,16 @@ async fn main() -> Result<()> {
     }
 
     let client = s3::Client::new();
+    let reports = client.report_all().await?;
 
-    client.report_all().await?;
+    let report_options = ReportOptions {
+        coloured:    should_colour_output(),
+        output_type: ReportType::Text,
+    };
+
+    for report in reports {
+        report.output(&report_options)?;
+    }
 
     Ok(())
 }

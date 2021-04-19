@@ -8,10 +8,8 @@ use crate::s3::{
     versioning::BucketVersioning,
     website::BucketWebsite,
     Report,
-    ReportOptions,
 };
 use anyhow::Result;
-use atty::Stream;
 use rusoto_core::{Region, RusotoError};
 use rusoto_s3::{
     GetBucketAclRequest,
@@ -25,7 +23,6 @@ use rusoto_s3::{
     S3Client,
 };
 use std::convert::TryInto;
-use std::env;
 
 pub struct Client {
     client: S3Client,
@@ -182,46 +179,16 @@ impl Client {
         Ok(report)
     }
 
-    fn should_colour_output(&self) -> bool {
-        if !atty::is(Stream::Stdout) {
-            // STDOUT is not a pseudoterminal
-            return false;
-        }
-
-        // Respect NO_COLOR environment variable
-        // https://no-color.org/
-        // If the variable is present, disable colour regardless of the value
-        if env::var("NO_COLOR").is_ok() {
-            return false;
-        }
-
-        match env::var("TERM") {
-            Err(_) => {
-                // Not sure about terminal type; play safe
-                false
-            },
-            Ok(termtype) => {
-                // Use colour unless dumb terminal detected
-                termtype != "dumb"
-            },
-        }
-    }
-
     // Reports on all discovered buckets
-    pub async fn report_all(&self) -> Result<()> {
+    pub async fn report_all(&self) -> Result<Vec<Report>> {
         let buckets = self.list_buckets().await?;
-
-        let options = ReportOptions {
-            // Use coloured output
-            coloured: self.should_colour_output(),
-            ..Default::default()
-        };
+        let mut reports = Vec::new();
 
         for bucket in buckets.iter() {
             let report = self.report(&bucket).await?;
-            report.output(&options);
+            reports.push(report);
         }
 
-        Ok(())
+        Ok(reports)
     }
 }
