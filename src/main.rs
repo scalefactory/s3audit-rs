@@ -5,10 +5,7 @@
 use anyhow::Result;
 use atty::Stream;
 use std::env;
-use structopt::{
-    clap,
-    StructOpt,
-};
+use structopt::StructOpt;
 
 mod common;
 mod s3;
@@ -19,9 +16,7 @@ use s3::{
 };
 
 #[derive(Debug, StructOpt)]
-#[structopt(
-    about = clap::crate_description!()
-)]
+#[structopt(about)]
 struct CliConfig {
     /// Specify an AWS profile name to use
     #[structopt(
