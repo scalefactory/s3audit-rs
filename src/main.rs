@@ -4,14 +4,11 @@
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
 use atty::Stream;
-use clap::{
-    crate_description,
-    crate_name,
-    crate_version,
-    App,
-    Arg,
-};
 use std::env;
+use structopt::{
+    clap,
+    StructOpt,
+};
 
 mod common;
 mod s3;
@@ -20,6 +17,30 @@ use s3::{
     ReportOptions,
     ReportType,
 };
+
+#[derive(Debug, StructOpt)]
+#[structopt(
+    about = clap::crate_description!()
+)]
+struct CliConfig {
+    /// Specify an AWS profile name to use
+    #[structopt(
+        long,
+        short,
+        value_name = "NAME",
+    )]
+    profile: Option<String>,
+
+    /// Specify the report output format
+    #[structopt(
+        long,
+        short,
+        default_value = "text",
+        possible_values = &["csv", "text"],
+        value_name = "FORMAT",
+    )]
+    format: ReportType,
+}
 
 fn should_colour_output() -> bool {
     if !atty::is(Stream::Stdout) {
@@ -48,15 +69,9 @@ fn should_colour_output() -> bool {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let matches = App::new(crate_name!())
-        .version(crate_version!())
-        .about(crate_description!())
-        .arg(
-            Arg::from_usage("-p, --profile=[NAME] 'Specify an AWS profile name to use'")
-        )
-        .get_matches();
+    let cli = CliConfig::from_args();
 
-    if let Some(profile_name) = matches.value_of("profile") {
+    if let Some(profile_name) = cli.profile {
         env::set_var("AWS_PROFILE", &*profile_name);
     }
 
@@ -65,7 +80,7 @@ async fn main() -> Result<()> {
 
     let report_options = ReportOptions {
         coloured:    should_colour_output(),
-        output_type: ReportType::Text,
+        output_type: cli.format,
     };
 
     for report in reports {
