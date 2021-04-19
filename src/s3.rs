@@ -1,5 +1,6 @@
 // Imports all S3 types
 mod acl;
+mod audits;
 mod client;
 mod encryption;
 mod logging;
@@ -10,6 +11,7 @@ mod versioning;
 mod website;
 
 pub use acl::*;
+pub use audits::*;
 pub use client::*;
 pub use encryption::*;
 pub use logging::*;

@@ -11,12 +11,14 @@ mod common;
 mod s3;
 
 use s3::{
+    Audit,
+    Audits,
     ReportOptions,
     ReportType,
 };
 
 #[derive(Debug, StructOpt)]
-#[structopt(about)]
+#[structopt(about, rename_all = "kebab")]
 struct CliConfig {
     /// Specify a specific bucket to audit
     #[structopt(
@@ -25,6 +27,22 @@ struct CliConfig {
         value_name = "BUCKET",
     )]
     bucket: Option<String>,
+
+    /// Disable specific audits
+    #[structopt(
+        long,
+        short,
+        value_name = "AUDIT",
+    )]
+    disable_check: Option<Vec<Audit>>,
+
+    /// Enable specific audits
+    #[structopt(
+        long,
+        short,
+        value_name = "AUDIT",
+    )]
+    enable_check: Option<Vec<Audit>>,
 
     /// Specify the report output format
     #[structopt(
@@ -74,12 +92,20 @@ fn should_colour_output() -> bool {
 async fn main() -> Result<()> {
     let cli = CliConfig::from_args();
 
+    // Set the AWS_PROFILE environment variable if the user requested a
+    // specific profile.
     if let Some(profile_name) = cli.profile {
         env::set_var("AWS_PROFILE", &*profile_name);
     }
 
+    // Work out which audits we're going to run.
+    let audits = Audits::new()
+        .disable(cli.disable_check)
+        .enable(cli.enable_check)
+        .enabled();
+
     let client = s3::Client::new();
-    let reports = client.report(cli.bucket).await?;
+    let reports = client.report(cli.bucket, audits).await?;
 
     let report_options = ReportOptions {
         coloured:    should_colour_output(),
