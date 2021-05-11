@@ -40,6 +40,19 @@ impl fmt::Display for PublicAccessBlockType {
 #[derive(Debug, PartialEq)]
 pub struct PublicAccessBlock(Vec<PublicAccessBlockType>);
 
+impl Default for PublicAccessBlock {
+    fn default() -> Self {
+        let blocks = vec![
+            PublicAccessBlockType::BlockPublicAcls(false),
+            PublicAccessBlockType::BlockPublicPolicy(false),
+            PublicAccessBlockType::IgnorePublicAcls(false),
+            PublicAccessBlockType::RestrictPublicBuckets(false),
+        ];
+
+        Self(blocks)
+    }
+}
+
 impl From<GetPublicAccessBlockOutput> for PublicAccessBlock {
     fn from(output: GetPublicAccessBlockOutput) -> Self {
         let config = output.public_access_block_configuration
