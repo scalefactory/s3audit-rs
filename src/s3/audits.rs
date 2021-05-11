@@ -73,9 +73,9 @@ impl Default for Audit {
 
 pub struct Audits(HashSet<Audit>);
 
-impl Audits {
-    // Returns a set of all possible audits
-    pub fn new() -> Self {
+impl Default for Audits {
+    fn default() -> Self {
+        // All audits are enabled by default
         let set = hashset![
             Audit::Acl,
             Audit::Cloudfront,
@@ -89,6 +89,13 @@ impl Audits {
         ];
 
         Self(set)
+    }
+}
+
+impl Audits {
+    // Returns a set of all possible audits
+    pub fn new() -> Self {
+        Self::default()
     }
 
     // Removes audits from the set, disabling them
