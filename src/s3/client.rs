@@ -209,7 +209,18 @@ impl Client {
             None
         };
 
-        let versioning = if audits.contains(&Audit::Versioning) {
+        // Both of these come from the Versioning API, so enabled either of
+        // these needs to get the bucket versioning.
+        let versioning_audits = vec![
+            Audit::MfaDelete,
+            Audit::Versioning,
+        ];
+
+        let audit_versioning = versioning_audits
+            .iter()
+            .any(|x| audits.contains(&x));
+
+        let versioning = if audit_versioning {
             let resp = self.get_bucket_versioning(bucket).await?;
             Some(resp)
         }
