@@ -33,6 +33,21 @@ struct CliConfig {
         long,
         short,
         value_name = "AUDIT",
+        possible_values = &[
+            "acl",
+            "all",
+            "cloudfront",
+            "encryption",
+            "logging",
+            "mfa",
+            "mfa-delete",
+            "policy",
+            "public-access-blocks",
+            "server-side-encryption",
+            "sse",
+            "versioning",
+            "website",
+        ],
     )]
     disable_check: Option<Vec<Audit>>,
 
@@ -41,6 +56,21 @@ struct CliConfig {
         long,
         short,
         value_name = "AUDIT",
+        possible_values = &[
+            "acl",
+            "all",
+            "cloudfront",
+            "encryption",
+            "logging",
+            "mfa",
+            "mfa-delete",
+            "policy",
+            "public-access-blocks",
+            "server-side-encryption",
+            "sse",
+            "versioning",
+            "website",
+        ],
     )]
     enable_check: Option<Vec<Audit>>,
 
