@@ -150,8 +150,15 @@ impl Client {
             ..Default::default()
         };
 
-        let output = self.client.get_public_access_block(input).await?;
-        let config: PublicAccessBlock = output.into();
+        let output = self.client.get_public_access_block(input).await;
+
+        // The error here should be more closely inspected. For now we just
+        // assume that the PublicAccessBlock settings didn't exist, so they
+        // aren't set.
+        let config = match output {
+            Err(_) => PublicAccessBlock::default(),
+            Ok(o)  => o.into(),
+        };
 
         Ok(config)
     }
