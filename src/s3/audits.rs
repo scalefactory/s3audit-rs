@@ -71,6 +71,7 @@ impl Default for Audit {
     }
 }
 
+#[derive(Debug)]
 pub struct Audits(HashSet<Audit>);
 
 impl Default for Audits {
@@ -93,9 +94,14 @@ impl Default for Audits {
 }
 
 impl Audits {
-    // Returns a set of all possible audits
+    // By default all audits are enabled
     pub fn new() -> Self {
         Self::default()
+    }
+
+    // Returns an empty set
+    fn empty(self) -> Self {
+        Self(HashSet::new())
     }
 
     // Removes audits from the set, disabling them
@@ -104,7 +110,7 @@ impl Audits {
             // If all audits were disabled, short circuit and just return a new
             // empty Audits struct.
             if audits.contains(&Audit::All) {
-                return Self(HashSet::new());
+                return self.empty();
             }
 
             for audit in audits {
@@ -121,7 +127,7 @@ impl Audits {
             // If all audits were enabled, short circuit and just return a new
             // full Audits struct.
             if audits.contains(&Audit::All) {
-                return Self(HashSet::new());
+                return Self::new();
             }
 
             for audit in audits {
