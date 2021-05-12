@@ -13,10 +13,10 @@ pub enum Emoji {
 impl fmt::Display for Emoji {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let symbol = match *self {
-        Self::Arrow => "❯".yellow(),
-        Self::Cross => "✖".red(),
-        Self::Info => "🛈".cyan(),
-        Self::Tick => "✔".green(),
+        Self::Arrow   => "❯".yellow(),
+        Self::Cross   => "✖".red(),
+        Self::Info    => "🛈".cyan(),
+        Self::Tick    => "✔".green(),
         Self::Warning => "⚠️ ".cyan(),
     };
 
