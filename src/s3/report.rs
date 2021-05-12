@@ -246,7 +246,7 @@ impl Report {
 
     // Simple text output
     pub fn text(&self) {
-        let name = self.name.bold().blue().to_string();
+        let name = self.name.bold().blue();
 
         println!("  {} {}", Emoji::Arrow, &name);
 
