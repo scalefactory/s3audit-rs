@@ -3,6 +3,31 @@
 S3 Audit is a tool that reports on various aspects of S3 buckets within an AWS
 account.
 
+## Installation
+
+```shell
+cargo install s3audit-rs
+```
+
+## Usage
+
+AWS credentials will be taken from the environment, it is recommended to run
+`s3audit-rs` using a tool like [`aws-vault`].
+
+```shell
+# Report on all buckets
+s3audit
+
+# Report on all buckets with output in CSV format
+s3audit --format=csv
+
+# Enable only a few specific audits
+s3audit --disable-check=all --enable-check=acl --enable-check=encryption
+
+# Disable coloured output
+env NO_COLOR=1 s3audit
+```
+
 ## License
 
 Licensed under either of
@@ -20,10 +45,11 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 
-<!-- links -->
-[LICENSE-APACHE]: LICENSE-APACHE
-[LICENSE-MIT]: LICENSE-MIT
-
 ## Minimum supported Rust version
 
 v1.48.0
+
+<!-- links -->
+[`aws-vault`]: https://github.com/99designs/aws-vault
+[LICENSE-APACHE]: LICENSE-APACHE
+[LICENSE-MIT]: LICENSE-MIT
