@@ -47,7 +47,6 @@ impl FromStr for ReportType {
 
 #[derive(Debug, Default)]
 pub struct ReportOptions {
-    pub coloured:    bool,
     pub output_type: ReportType,
 }
 
@@ -229,7 +228,7 @@ impl Report {
         match options.output_type {
             ReportType::Csv  => self.csv(),
             ReportType::Text => {
-                self.text(options.coloured);
+                self.text();
                 Ok(())
             },
         }
@@ -246,11 +245,8 @@ impl Report {
     }
 
     // Simple text output
-    pub fn text(&self, coloured: bool) {
-        let name = match coloured {
-            true => self.name.bold().blue().to_string(),
-            _    => self.name.to_string(),
-        };
+    pub fn text(&self) {
+        let name = self.name.bold().blue().to_string();
 
         println!("  {} {}", Emoji::Arrow, &name);
 

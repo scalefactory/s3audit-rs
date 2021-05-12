@@ -3,7 +3,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
-use atty::Stream;
+use colored::control::SHOULD_COLORIZE;
 use std::env;
 use structopt::StructOpt;
 
@@ -93,33 +93,31 @@ struct CliConfig {
     profile: Option<String>,
 }
 
-fn should_colour_output() -> bool {
-    if !atty::is(Stream::Stdout) {
-        // STDOUT is not a pseudoterminal
-        return false;
-    }
-
-    // Respect NO_COLOR environment variable
-    // https://no-color.org/
-    // If the variable is present, disable colour regardless of the value
-    if env::var("NO_COLOR").is_ok() {
-        return false;
-    }
-
+// The colored library does a lot of work for us here. It will check various
+// environment variables, and ensure that we're outputting to stdout.
+// All colorize methods will respect what happens here, so we should ONLY
+// colour output via those methods.
+fn should_colour_output() {
+    // We also do a bit extra and ensure that the TERM is a decent type
     match env::var("TERM") {
         Err(_) => {
             // Not sure about terminal type; play safe
-            false
+            SHOULD_COLORIZE.set_override(false)
         },
         Ok(termtype) => {
             // Use colour unless dumb terminal detected
-            termtype != "dumb"
+            if termtype == "dumb" {
+                SHOULD_COLORIZE.set_override(false)
+            }
         },
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // A few extra checks on top of what colorize itself does.
+    should_colour_output();
+
     let cli = CliConfig::from_args();
 
     // Set the AWS_PROFILE environment variable if the user requested a
@@ -138,7 +136,6 @@ async fn main() -> Result<()> {
     let reports = client.report(cli.bucket, audits).await?;
 
     let report_options = ReportOptions {
-        coloured:    should_colour_output(),
         output_type: cli.format,
     };
 
