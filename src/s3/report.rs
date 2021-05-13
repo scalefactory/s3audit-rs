@@ -17,33 +17,9 @@ use crate::s3::{
 };
 use serde::Serialize;
 use std::io;
-use std::str::FromStr;
 
-#[derive(Debug)]
-pub enum ReportType {
-    Csv,
-    Text,
-}
-
-impl Default for ReportType {
-    fn default() -> Self {
-        Self::Text
-    }
-}
-
-impl FromStr for ReportType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.to_lowercase();
-
-        match s.as_str() {
-            "csv"  => Ok(Self::Csv),
-            "text" => Ok(Self::Text),
-            _      => Err(anyhow::anyhow!("Unknown Report Type")),
-        }
-    }
-}
+mod report_type;
+pub use report_type::*;
 
 #[derive(Debug, Default)]
 pub struct ReportOptions {
