@@ -300,12 +300,11 @@ impl Reports {
 
     pub fn output(&self, options: &ReportOptions) -> Result<()> {
         match options.output_type {
-            ReportType::Csv  => self.csv(),
-            ReportType::Text => {
-                self.text();
-                Ok(())
-            },
+            ReportType::Csv  => self.csv()?,
+            ReportType::Text => self.text(),
         }
+
+        Ok(())
     }
 
     // CSV output
