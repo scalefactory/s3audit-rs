@@ -62,6 +62,9 @@ pub struct Report {
     pub website:             Option<BucketWebsite>,
 }
 
+#[derive(Debug)]
+pub struct Reports(Vec<Report>);
+
 #[derive(Default, Serialize)]
 struct CsvOutput {
     name: String,
@@ -224,22 +227,12 @@ impl From<&Report> for CsvOutput {
 }
 
 impl Report {
-    pub fn output(&self, options: &ReportOptions) -> Result<()> {
-        match options.output_type {
-            ReportType::Csv  => self.csv(),
-            ReportType::Text => {
-                self.text();
-                Ok(())
-            },
-        }
-    }
-
     // CSV output
-    pub fn csv(&self) -> Result<()> {
-        let mut writer = csv::Writer::from_writer(io::stdout());
+    pub fn csv<W>(&self, writer: &mut csv::Writer<W>) -> Result<()>
+    where W: ::std::io::Write,
+    {
         let output: CsvOutput = self.into();
         writer.serialize(output)?;
-        writer.flush()?;
 
         Ok(())
     }
@@ -296,6 +289,45 @@ impl Report {
         // Bucket logging
         if let Some(logging) = &self.logging {
             println!("    {}", logging);
+        }
+    }
+}
+
+impl Reports {
+    pub fn new(reports: Vec<Report>) -> Self {
+        Self(reports)
+    }
+
+    pub fn output(&self, options: &ReportOptions) -> Result<()> {
+        match options.output_type {
+            ReportType::Csv  => self.csv(),
+            ReportType::Text => {
+                self.text();
+                Ok(())
+            },
+        }
+    }
+
+    // CSV output
+    // Wrapping the report CSV method and passing a writer here is necessary,
+    // otherwise we end up with duplicate headers when dealing with multiple
+    // buckets.
+    pub fn csv(&self) -> Result<()> {
+        let mut writer = csv::Writer::from_writer(io::stdout());
+
+        for report in &self.0 {
+            report.csv(&mut writer)?;
+        }
+
+        writer.flush()?;
+
+        Ok(())
+    }
+
+    // Text output
+    pub fn text(&self) {
+        for report in &self.0 {
+            report.text();
         }
     }
 }

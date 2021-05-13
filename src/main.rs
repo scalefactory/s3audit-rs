@@ -139,9 +139,7 @@ async fn main() -> Result<()> {
         output_type: cli.format,
     };
 
-    for report in reports {
-        report.output(&report_options)?;
-    }
+    reports.output(&report_options)?;
 
     Ok(())
 }

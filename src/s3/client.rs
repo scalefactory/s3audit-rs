@@ -9,6 +9,7 @@ use crate::s3::{
     versioning::BucketVersioning,
     website::BucketWebsite,
     Report,
+    Reports,
 };
 use anyhow::Result;
 use rusoto_core::{Region, RusotoError};
@@ -255,7 +256,7 @@ impl Client {
         &self,
         bucket: Option<String>,
         audits: Vec<Audit>,
-    ) -> Result<Vec<Report>> {
+    ) -> Result<Reports> {
         let buckets = match bucket {
             None         => self.list_buckets().await?,
             Some(bucket) => vec![bucket],
@@ -267,6 +268,8 @@ impl Client {
             let report = self.bucket_report(&bucket, &audits).await?;
             reports.push(report);
         }
+
+        let reports = Reports::new(reports);
 
         Ok(reports)
     }
