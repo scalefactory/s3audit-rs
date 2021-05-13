@@ -1,6 +1,6 @@
 // Bucket reporting in various formats
 use anyhow::Result;
-use colored::*;
+use colored::Colorize;
 use crate::common::Emoji;
 use crate::s3::{
     BucketAcl,
@@ -53,9 +53,7 @@ impl Report {
 
     // Simple text output
     pub fn text(&self) {
-        let name = self.name.bold().blue();
-
-        println!("  {} {}", Emoji::Arrow, &name);
+        println!("  {} {}", Emoji::Arrow, self.name.bold().blue());
 
         // Public access configuration
         if let Some(blocks) = &self.public_access_block {
