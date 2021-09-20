@@ -371,4 +371,27 @@ mod tests {
 
         assert_eq!(wildcards, expected);
     }
+
+    #[test]
+    fn test_policy_some_service_principal() {
+        let json = json!({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::s3audit-rs-example-bucket/*",
+                    "Principal": {
+                        "Service": "s3.amazonaws.com"
+                    },
+                },
+            ],
+        });
+
+        let policy = policy(Some(json));
+        let expected = Wildcards(0);
+        let wildcards = policy.wildcards();
+
+        assert_eq!(wildcards, expected);
+    }
 }

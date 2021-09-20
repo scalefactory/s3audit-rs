@@ -132,4 +132,23 @@ mod tests {
         assert_eq!(principal.0, expected);
         assert_eq!(principal.wildcards(), 1);
     }
+
+    #[test]
+    fn test_from_policy_service_principal_string() {
+        let policy = json!({
+            "Effect": "Allow",
+            "Action": "*",
+            "Principal": {
+                "Service": "s3.amazonaws.com"
+            },
+        });
+
+        let principal = &policy["Principal"];
+        let principal: Principal = principal.into();
+        let expected: Vec<String> = Vec::new();
+
+        assert_eq!(principal.0, expected);
+        assert_eq!(principal.wildcards(), 0);
+    }
+
 }
