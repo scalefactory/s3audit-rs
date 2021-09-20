@@ -115,6 +115,8 @@ fn should_colour_output() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::init();
+
     // A few extra checks on top of what colorize itself does.
     should_colour_output();
 
