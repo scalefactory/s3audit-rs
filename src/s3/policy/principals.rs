@@ -1,4 +1,5 @@
 // Checks if S3 policies allow wildcard entities.
+use log::debug;
 use serde_json::Value;
 
 const CLOUDFRONT_OAI: &str = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ";
@@ -50,25 +51,32 @@ impl From<&Value> for Principal {
             //   "AWS": "arn:aws:iam::foo"
             // }
             Value::Object(o) => {
+                debug!("Working with object: {:?}", o);
+
                 // This could also be "Federated", "Service", "CanonicalUser",
                 // etc, but we aren't interested in those.
-                match &o["AWS"] {
-                    Value::String(arn) => {
-                        let arns = vec![
-                            String::from(arn),
-                        ];
+                if let Some(principal) = o.get("AWS") {
+                    match principal {
+                        Value::String(arn) => {
+                            let arns = vec![
+                                String::from(arn),
+                            ];
 
-                        Self(arns)
-                    },
-                    Value::Array(vec) => {
-                        // Each entry should be a string now.
-                        let arns: Vec<String> = vec.iter()
-                            .map(|s| String::from(s.as_str().unwrap()))
-                            .collect();
+                            Self(arns)
+                        },
+                        Value::Array(vec) => {
+                            // Each entry should be a string now.
+                            let arns: Vec<String> = vec.iter()
+                                .map(|s| String::from(s.as_str().unwrap()))
+                                .collect();
 
-                        Self(arns)
-                    },
-                    _ => Self(Vec::new()),
+                            Self(arns)
+                        },
+                        _ => Self(Vec::new()),
+                    }
+                }
+                else {
+                    Self(Vec::new())
                 }
             },
             _ => Self(Vec::new()),
