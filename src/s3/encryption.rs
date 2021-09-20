@@ -16,7 +16,10 @@ pub enum BucketEncryption {
 }
 
 // Type alias to avoid long lines in From impl.
-type EncryptionResult = Result<GetBucketEncryptionOutput, RusotoError<GetBucketEncryptionError>>;
+type EncryptionResult = Result<
+    GetBucketEncryptionOutput,
+    RusotoError<GetBucketEncryptionError>,
+>;
 
 // Could probably replace a log of this with some .and_then shenanigans.
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
