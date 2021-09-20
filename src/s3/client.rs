@@ -12,7 +12,11 @@ use crate::s3::{
     Reports,
 };
 use anyhow::Result;
-use rusoto_core::{Region, RusotoError};
+use log::info;
+use rusoto_core::{
+    Region,
+    RusotoError,
+};
 use rusoto_s3::{
     GetBucketAclRequest,
     GetBucketEncryptionRequest,
@@ -34,6 +38,9 @@ impl Client {
     // Get a new S3 client
     pub fn new() -> Self {
         let region = Region::default();
+
+        info!("Creating new client in region: {:?}", region);
+
         let client = S3Client::new(region);
 
         Self {
@@ -43,6 +50,8 @@ impl Client {
 
     // List all buckets on an account
     async fn list_buckets(&self) -> Result<Vec<String>> {
+        info!("Listing buckets");
+
         let output = self.client.list_buckets().await?;
 
         let bucket_names = output.buckets.map_or_else(Vec::new, |buckets| {
@@ -55,6 +64,8 @@ impl Client {
     }
 
     async fn get_bucket_acl(&self, bucket: &str) -> Result<BucketAcl> {
+        info!("Getting bucket ACL for bucket: {}", bucket);
+
         let input = GetBucketAclRequest {
             bucket: bucket.into(),
             ..Default::default()
@@ -67,6 +78,8 @@ impl Client {
     }
 
     async fn get_bucket_encryption(&self, bucket: &str) -> Result<BucketEncryption> {
+        info!("Getting bucket encryption for bucket: {}", bucket);
+
         let input = GetBucketEncryptionRequest {
             bucket: bucket.to_owned(),
             ..Default::default()
@@ -79,6 +92,8 @@ impl Client {
     }
 
     async fn get_bucket_logging(&self, bucket: &str) -> Result<BucketLogging> {
+        info!("Getting bucket logging for bucket: {}", bucket);
+
         let input = GetBucketLoggingRequest {
             bucket: bucket.into(),
             ..Default::default()
@@ -91,6 +106,8 @@ impl Client {
     }
 
     async fn get_bucket_policy(&self, bucket: &str) -> Result<Option<BucketPolicy>> {
+        info!("Getting bucket policy for bucket: {}", bucket);
+
         let input = GetBucketPolicyRequest {
             bucket: bucket.into(),
             ..Default::default()
@@ -120,6 +137,8 @@ impl Client {
     }
 
     async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
+        info!("Getting bucket versioning for bucket: {}", bucket);
+
         let input = GetBucketVersioningRequest {
             bucket: bucket.into(),
             ..Default::default()
@@ -132,6 +151,8 @@ impl Client {
     }
 
     async fn get_bucket_website(&self, bucket: &str) -> Result<BucketWebsite> {
+        info!("Getting bucket website for bucket: {}", bucket);
+
         let input = GetBucketWebsiteRequest {
             bucket: bucket.into(),
             ..Default::default()
@@ -146,6 +167,8 @@ impl Client {
 
     // Get the bucket's public access block configuration
     async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
+        info!("Getting public access block for bucket: {}", bucket);
+
         let input = GetPublicAccessBlockRequest {
             bucket: bucket.to_owned(),
             ..Default::default()
@@ -170,6 +193,8 @@ impl Client {
         bucket: &str,
         audits: &[Audit],
     ) -> Result<Report> {
+        info!("Generating report for bucket: {}", bucket);
+
         let acl = if audits.contains(&Audit::Acl) {
             let resp = self.get_bucket_acl(bucket).await?;
             Some(resp)
@@ -261,6 +286,8 @@ impl Client {
             None         => self.list_buckets().await?,
             Some(bucket) => vec![bucket],
         };
+
+        info!("Generating reports for buckets: {:?}", buckets);
 
         let mut reports = Vec::new();
 
