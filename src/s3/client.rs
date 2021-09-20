@@ -219,7 +219,7 @@ impl Client {
 
         let audit_versioning = versioning_audits
             .iter()
-            .any(|x| audits.contains(&x));
+            .any(|x| audits.contains(x));
 
         let versioning = if audit_versioning {
             let resp = self.get_bucket_versioning(bucket).await?;
@@ -265,7 +265,7 @@ impl Client {
         let mut reports = Vec::new();
 
         for bucket in buckets.iter() {
-            let report = self.bucket_report(&bucket, &audits).await?;
+            let report = self.bucket_report(bucket, &audits).await?;
             reports.push(report);
         }
 
