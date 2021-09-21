@@ -134,7 +134,7 @@ async fn main() -> Result<()> {
         .enable(cli.enable_check)
         .enabled();
 
-    let client = s3::Client::new();
+    let client = s3::Client::new(None);
     let reports = client.report(cli.bucket, audits).await?;
 
     let report_options = ReportOptions {
