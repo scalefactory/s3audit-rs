@@ -30,14 +30,12 @@ impl Principal {
 // returns a Vec of the discovered ARNs wrapped in a Principal struct.
 impl From<&Value> for Principal {
     fn from(value: &Value) -> Self {
-        let output = match value {
+        let arns = match value {
             // "Principal": "arn:aws:iam::etc"
             Value::String(arn) => {
-                let arns = vec![
+                vec![
                     String::from(arn),
-                ];
-
-                Self(arns)
+                ]
             },
             // "Principal": {
             //   "AWS": [
@@ -58,33 +56,30 @@ impl From<&Value> for Principal {
                 if let Some(principal) = o.get("AWS") {
                     match principal {
                         Value::String(arn) => {
-                            let arns = vec![
+                            vec![
                                 String::from(arn),
-                            ];
-
-                            Self(arns)
+                            ]
                         },
                         Value::Array(vec) => {
                             // Each entry should be a string now.
-                            let arns: Vec<String> = vec.iter()
+                            vec.iter()
                                 .map(|s| String::from(s.as_str().unwrap()))
-                                .collect();
-
-                            Self(arns)
+                                .collect()
                         },
-                        _ => Self(Vec::new()),
+                        _ => Vec::new(),
                     }
                 }
                 else {
-                    Self(Vec::new())
+                    Vec::new()
                 }
             },
-            _ => Self(Vec::new()),
+            _ => Vec::new(),
         };
 
-        output
+        Self(arns)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
