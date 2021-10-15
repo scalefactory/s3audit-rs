@@ -1,6 +1,6 @@
 [package]
 name = "s3audit"
-version = "0.1.0"
+version = "1.0.0"
 authors = [
     # Alphabetical by surname
     "Tim Bannister <tim@scalefactory.com>",
