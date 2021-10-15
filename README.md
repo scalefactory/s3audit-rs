@@ -28,6 +28,10 @@ s3audit --disable-check=all --enable-check=acl --enable-check=encryption
 env NO_COLOR=1 s3audit
 ```
 
+## Minimum Supported Rust Version (MSRV)
+
+v1.51.0
+
 ## License
 
 Licensed under either of
@@ -39,15 +43,12 @@ Licensed under either of
 
 at your option.
 
+
 ## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
-
-## Minimum supported Rust version
-
-v1.48.0
 
 <!-- links -->
 [`aws-vault`]: https://github.com/99designs/aws-vault

@@ -51,7 +51,7 @@ version = "0.3"
 features = ["wrap_help"]
 
 [dev-dependencies]
-pretty_assertions = "0.7"
+pretty_assertions = "1.0"
 
 [dev-dependencies.rusoto_mock]
 version = "0.47.0"
