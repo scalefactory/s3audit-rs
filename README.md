@@ -6,13 +6,13 @@ account.
 ## Installation
 
 ```shell
-cargo install s3audit-rs
+cargo install s3audit
 ```
 
 ## Usage
 
 AWS credentials will be taken from the environment, it is recommended to run
-`s3audit-rs` using a tool like [`aws-vault`].
+`s3audit` using a tool like [`aws-vault`].
 
 ```shell
 # Report on all buckets
