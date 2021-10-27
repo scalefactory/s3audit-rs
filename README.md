@@ -30,6 +30,21 @@ s3audit --disable-check=all --enable-check=acl --enable-check=encryption
 env NO_COLOR=1 s3audit
 ```
 
+### AWS permissions
+
+You should use run `s3audit` as an IAM principal that is allowed to
+call `s3:ListAllMyBuckets`, and is also allow to run these (read only)
+actions for all buckets in your account:
+
+- `s3:ListAllMyBuckets`
+- `s3:GetBucketAcl`
+- `s3:GetBucketLogging`
+- `s3:GetBucketPolicy`
+- `s3:GetBucketPublicAccessBlock`
+- `s3:GetBucketVersioning`
+- `s3:GetBucketWebsite`
+- `s3:GetEncryptionConfiguration`
+
 ## Minimum Supported Rust Version (MSRV)
 
 v1.51.0
