@@ -76,3 +76,13 @@ jobs:
           asset_name: '${{ steps.rename_crate.outputs.asset_name }}'
           asset_path: '${{ steps.rename_crate.outputs.asset_path }}'
           upload_url: '${{ steps.create_release.outputs.upload_url }}'
+      # Finally, publish to crates.io
+      # We don't verify the publish here, as we verified as part of the dry-run
+      # above.
+      - name: 'Publish to Crates.io'
+        uses: 'actions-rs/cargo@v1'
+        env:
+          CARGO_REGISTRY_TOKEN: '${{ secrets.CARGO_TOKEN }}'
+        with:
+          command: 'publish'
+          args: '--no-verify'
