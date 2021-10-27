@@ -3,6 +3,8 @@
 S3 Audit is a tool that reports on various aspects of S3 buckets within an AWS
 account.
 
+For more information, read [We rewrote s3audit in Rust](https://scalefactory.com/blog/2021/10/27/we-rewrote-s3audit-in-rust/).
+
 ## Installation
 
 ```shell
