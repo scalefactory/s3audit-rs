@@ -47,7 +47,7 @@ actions for all buckets in your account:
 
 ## Minimum Supported Rust Version (MSRV)
 
-v1.51.0
+v1.53.0
 
 ## License
 

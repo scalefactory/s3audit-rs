@@ -1,6 +1,10 @@
 // Bucket versioning
 use crate::common::Emoji;
-use rusoto_s3::GetBucketVersioningOutput;
+use aws_sdk_s3::model::{
+    BucketVersioningStatus,
+    MfaDeleteStatus,
+};
+use aws_sdk_s3::output::GetBucketVersioningOutput;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -9,12 +13,12 @@ pub enum MfaStatus {
     Disabled,
 }
 
-impl From<String> for MfaStatus {
-    fn from(status: String) -> Self {
-        match status.as_ref() {
-            "Enabled"  => Self::Enabled,
-            "Disabled" => Self::Disabled,
-            _          => unreachable!(),
+impl From<MfaDeleteStatus> for MfaStatus {
+    fn from(status: MfaDeleteStatus) -> Self {
+        match status {
+            MfaDeleteStatus::Disabled => Self::Disabled,
+            MfaDeleteStatus::Enabled  => Self::Enabled,
+            _                         => todo!(),
         }
     }
 }
@@ -42,12 +46,12 @@ pub enum VersioningStatus {
     Suspended,
 }
 
-impl From<String> for VersioningStatus {
-    fn from(status: String) -> Self {
-        match status.as_ref() {
-            "Enabled"   => Self::Enabled,
-            "Suspended" => Self::Suspended,
-            _           => unreachable!(),
+impl From<BucketVersioningStatus> for VersioningStatus {
+    fn from(status: BucketVersioningStatus) -> Self {
+        match status {
+            BucketVersioningStatus::Enabled   => Self::Enabled,
+            BucketVersioningStatus::Suspended => Self::Suspended,
+            _                                 => todo!(),
         }
     }
 }
@@ -103,6 +107,7 @@ impl BucketVersioning {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aws_sdk_s3::output::GetBucketVersioningOutput;
 
     #[test]
     fn test_from_for_bucket_versioning() {
@@ -117,10 +122,10 @@ mod tests {
             let mfa_delete_expected = test.2;
             let versioning_expected = test.3;
 
-            let output = GetBucketVersioningOutput {
-                mfa_delete: Some(mfa_delete.into()),
-                status:     Some(status.into()),
-            };
+            let output = GetBucketVersioningOutput::builder()
+                .mfa_delete(mfa_delete.into())
+                .status(status.into())
+                .build();
 
             let expected = BucketVersioning {
                 mfa_delete: mfa_delete_expected,

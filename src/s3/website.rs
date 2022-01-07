@@ -1,10 +1,8 @@
 // Bucket website
 use crate::common::Emoji;
-use rusoto_core::RusotoError;
-use rusoto_s3::{
-    GetBucketWebsiteError,
-    GetBucketWebsiteOutput,
-};
+use aws_sdk_s3::error::GetBucketWebsiteError;
+use aws_sdk_s3::output::GetBucketWebsiteOutput;
+use aws_sdk_s3::SdkError;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -14,7 +12,7 @@ pub enum BucketWebsite {
 }
 
 // Type alias to avoid long line in the From impl
-type WebsiteResult = Result<GetBucketWebsiteOutput, RusotoError<GetBucketWebsiteError>>;
+type WebsiteResult = Result<GetBucketWebsiteOutput, SdkError<GetBucketWebsiteError>>;
 
 impl From<WebsiteResult> for BucketWebsite {
     fn from(res: WebsiteResult) -> Self {

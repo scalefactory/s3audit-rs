@@ -3,9 +3,9 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
+use clap::Parser;
 use colored::control::SHOULD_COLORIZE;
 use std::env;
-use structopt::StructOpt;
 
 mod common;
 mod s3;
@@ -17,11 +17,11 @@ use s3::{
     ReportType,
 };
 
-#[derive(Debug, StructOpt)]
-#[structopt(about, rename_all = "kebab")]
+#[derive(Debug, Parser)]
+#[clap(about, rename_all = "kebab")]
 struct CliConfig {
     /// Specify a specific bucket to audit
-    #[structopt(
+    #[clap(
         long,
         short,
         value_name = "BUCKET",
@@ -29,7 +29,7 @@ struct CliConfig {
     bucket: Option<String>,
 
     /// Disable specific audits
-    #[structopt(
+    #[clap(
         long,
         short,
         value_name = "AUDIT",
@@ -52,7 +52,7 @@ struct CliConfig {
     disable_check: Option<Vec<Audit>>,
 
     /// Enable specific audits
-    #[structopt(
+    #[clap(
         long,
         short,
         value_name = "AUDIT",
@@ -75,7 +75,7 @@ struct CliConfig {
     enable_check: Option<Vec<Audit>>,
 
     /// Specify the report output format
-    #[structopt(
+    #[clap(
         long,
         short,
         default_value = "text",
@@ -85,7 +85,7 @@ struct CliConfig {
     format: ReportType,
 
     /// Specify an AWS profile name to use
-    #[structopt(
+    #[clap(
         long,
         short,
         value_name = "NAME",
@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
     // A few extra checks on top of what colorize itself does.
     should_colour_output();
 
-    let cli = CliConfig::from_args();
+    let cli = CliConfig::parse();
 
     // Set the AWS_PROFILE environment variable if the user requested a
     // specific profile.
@@ -134,7 +134,7 @@ async fn main() -> Result<()> {
         .enable(cli.enable_check)
         .enabled();
 
-    let client = s3::Client::new(None);
+    let client = s3::Client::new(None).await;
     let reports = client.report(cli.bucket, audits).await?;
 
     let report_options = ReportOptions {
