@@ -12,26 +12,18 @@ use crate::s3::{
     Reports,
 };
 use anyhow::Result;
-use log::info;
-use rusoto_core::{
-    Region,
-    RusotoError,
-};
-use rusoto_s3::{
-    GetBucketAclRequest,
-    GetBucketEncryptionRequest,
-    GetBucketLocationRequest,
-    GetBucketLoggingRequest,
-    GetBucketPolicyRequest,
-    GetBucketVersioningRequest,
-    GetBucketWebsiteRequest,
-    GetPublicAccessBlockRequest,
-    S3,
-    S3Client,
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_s3::SdkError;
+use aws_sdk_s3::client::Client as S3Client;
+use aws_sdk_s3::model::BucketLocationConstraint;
+use aws_sdk_s3::output::GetBucketPolicyOutput;
+use aws_types::region::Region;
+use log::{
+    debug,
+    info,
 };
 use std::convert::TryInto;
 use std::fmt;
-use std::str::FromStr;
 
 #[derive(Debug)]
 struct Bucket {
@@ -51,12 +43,21 @@ pub struct Client {
 
 impl Client {
     // Get a new S3 client
-    pub fn new(region: Option<Region>) -> Self {
-        let region = region.map_or_else(Region::default, |region| region);
-
+    pub async fn new(region: Option<Region>) -> Self {
         info!("Creating new client in region: {:?}", region);
 
-        let client = S3Client::new(region);
+        // Attempt to create a client in the given region, if one isn't given
+        // use the default provider chain, if that fails default to us-east-1.
+        let region_provider = RegionProviderChain::first_try(region)
+            .or_default_provider()
+            .or_else("us-east-1");
+
+        let config = aws_config::from_env()
+            .region(region_provider)
+            .load()
+            .await;
+
+        let client = S3Client::new(&config);
 
         Self {
             client: client,
@@ -69,10 +70,14 @@ impl Client {
     async fn list_buckets(&self) -> Result<Vec<Bucket>> {
         info!("Listing buckets");
 
-        let output = self.client.list_buckets().await?;
+        let output = self.client
+            .list_buckets()
+            .send()
+            .await?;
 
         let bucket_names = output.buckets.map_or_else(Vec::new, |buckets| {
-            buckets.iter()
+            buckets
+                .iter()
                 .filter_map(|bucket| bucket.name.to_owned())
                 .collect()
         });
@@ -95,12 +100,12 @@ impl Client {
     async fn get_bucket_acl(&self, bucket: &str) -> Result<BucketAcl> {
         info!("Getting bucket ACL for bucket: {}", bucket);
 
-        let input = GetBucketAclRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_acl()
+            .bucket(bucket)
+            .send()
+            .await?;
 
-        let output = self.client.get_bucket_acl(input).await?;
         let config: BucketAcl = output.into();
 
         Ok(config)
@@ -109,12 +114,12 @@ impl Client {
     async fn get_bucket_encryption(&self, bucket: &str) -> Result<BucketEncryption> {
         info!("Getting bucket encryption for bucket: {}", bucket);
 
-        let input = GetBucketEncryptionRequest {
-            bucket: bucket.to_owned(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_encryption()
+            .bucket(bucket)
+            .send()
+            .await;
 
-        let output = self.client.get_bucket_encryption(input).await;
         let config: BucketEncryption = output.into();
 
         Ok(config)
@@ -123,21 +128,26 @@ impl Client {
     async fn get_bucket_location(&self, bucket: &str) -> Result<String> {
         info!("Getting bucket location for bucket: {}", bucket);
 
-        let input = GetBucketLocationRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_location()
+            .bucket(bucket)
+            .send()
+            .await?;
 
-        let output = self.client.get_bucket_location(input).await?;
-        let location = output.location_constraint
-            .unwrap_or_else(|| "us-east-1".into());
+        debug!("Bucket location returned: {:?}", output);
 
-        // us-east-1 is special and returns null as its location.
-        // eu-west-1 may return EU as its location depending on bucket age.
-        let location = match location.as_ref() {
-            ""   => "us-east-1".to_string(),
-            "EU" => "eu-west-1".to_string(),
-            _    => location,
+        let location = match output.location_constraint {
+            Some(BucketLocationConstraint::Eu)         => "eu-west-1".to_string(),
+            Some(BucketLocationConstraint::Unknown(s)) => {
+                // us-east-1 comes back as a blank string, we have to treat it
+                // specially.
+                match s.as_str() {
+                    "" => "us-east-1".to_string(),
+                    _  => s,
+                }
+            },
+            Some(location)                             => location.as_str().to_string(),
+            None                                       => "us-east-1".to_string(),
         };
 
         Ok(location)
@@ -146,12 +156,12 @@ impl Client {
     async fn get_bucket_logging(&self, bucket: &str) -> Result<BucketLogging> {
         info!("Getting bucket logging for bucket: {}", bucket);
 
-        let input = GetBucketLoggingRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_logging()
+            .bucket(bucket)
+            .send()
+            .await?;
 
-        let output = self.client.get_bucket_logging(input).await?;
         let config: BucketLogging = output.into();
 
         Ok(config)
@@ -160,22 +170,35 @@ impl Client {
     async fn get_bucket_policy(&self, bucket: &str) -> Result<Option<BucketPolicy>> {
         info!("Getting bucket policy for bucket: {}", bucket);
 
-        let input = GetBucketPolicyRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_policy()
+            .bucket(bucket)
+            .send()
+            .await;
 
-        let output = match self.client.get_bucket_policy(input).await {
+        debug!("get_bucket_policy returned: {:?}", output);
+
+        let output = match output {
             Ok(item) => Ok(item),
-            Err(RusotoError::Unknown(response)) => {
-                if response.status == 404 {
-                    return Ok(None) // there's no bucket policy; not an error
-                } else {
-                    Err(RusotoError::Unknown(response))
-                }
-            }
             Err(error) => {
-                Err(error)
+                match error {
+                    // Handle specific error cases from the service that aren't
+                    // really error.
+                    // We're just treating all ServiceErrors the same here, but
+                    // we probably want to make this way more specific at some
+                    // point.
+                    SdkError::ServiceError { .. } => {
+                        // Build a basic empty policy
+                        let policy = GetBucketPolicyOutput::builder()
+                            .set_policy(None)
+                            .build();
+
+                        Ok(policy)
+                    },
+
+                    // Anything else is a real error.
+                    _ => Err(error),
+                }
             }
         }?;
 
@@ -192,9 +215,10 @@ impl Client {
         info!("Getting bucket region for bucket: {}", bucket);
 
         let location = self.get_bucket_location(bucket).await?;
-        info!("  - Bucket location is: {}", location);
 
-        let region   = Region::from_str(&location)?;
+        info!("  - Bucket location is: {:?}", location);
+
+        let region = Region::new(location);
 
         Ok(region)
     }
@@ -202,12 +226,12 @@ impl Client {
     async fn get_bucket_versioning(&self, bucket: &str) -> Result<BucketVersioning> {
         info!("Getting bucket versioning for bucket: {}", bucket);
 
-        let input = GetBucketVersioningRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
+        let output = self.client
+            .get_bucket_versioning()
+            .bucket(bucket)
+            .send()
+            .await?;
 
-        let output = self.client.get_bucket_versioning(input).await?;
         let config: BucketVersioning = output.into();
 
         Ok(config)
@@ -216,13 +240,13 @@ impl Client {
     async fn get_bucket_website(&self, bucket: &str) -> Result<BucketWebsite> {
         info!("Getting bucket website for bucket: {}", bucket);
 
-        let input = GetBucketWebsiteRequest {
-            bucket: bucket.into(),
-            ..Default::default()
-        };
-
         // Note that we aren't using the `?` operator here.
-        let output = self.client.get_bucket_website(input).await;
+        let output = self.client
+            .get_bucket_website()
+            .bucket(bucket)
+            .send()
+            .await;
+
         let config: BucketWebsite = output.into();
 
         Ok(config)
@@ -232,12 +256,11 @@ impl Client {
     async fn get_public_access_block(&self, bucket: &str) -> Result<PublicAccessBlock> {
         info!("Getting public access block for bucket: {}", bucket);
 
-        let input = GetPublicAccessBlockRequest {
-            bucket: bucket.to_owned(),
-            ..Default::default()
-        };
-
-        let output = self.client.get_public_access_block(input).await;
+        let output = self.client
+            .get_public_access_block()
+            .bucket(bucket)
+            .send()
+            .await;
 
         // The error here should be more closely inspected. For now we just
         // assume that the PublicAccessBlock settings didn't exist, so they
@@ -366,7 +389,7 @@ impl Client {
         // buckets from the region they reside in.
         for bucket in buckets.iter() {
             let region = Some(bucket.region.to_owned());
-            let client = Self::new(region);
+            let client = Self::new(region).await;
             let report = client.bucket_report(&bucket.name, &audits).await?;
 
             reports.push(report);

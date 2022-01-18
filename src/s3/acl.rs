@@ -1,6 +1,6 @@
 // Bucket ACL
 use crate::common::Emoji;
-use rusoto_s3::GetBucketAclOutput;
+use aws_sdk_s3::output::GetBucketAclOutput;
 use std::fmt;
 
 // Grantee URIs that indicate public access
@@ -69,10 +69,12 @@ impl fmt::Display for BucketAcl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusoto_s3::{
+    use aws_sdk_s3::model::{
         Grant,
         Grantee,
         Owner,
+        Permission,
+        Type,
     };
 
     const PRIVATE_GROUP: &str = "http://acs.amazonaws.com/groups/private/lovelace";
@@ -80,28 +82,28 @@ mod tests {
 
     #[test]
     fn test_from_for_bucket_acl_private() {
-        let owner = Owner {
-            display_name: Some("Ada Lovelace".into()),
-            id:           Some("lovelace".into()),
-        };
+        let owner = Owner::builder()
+            .display_name("Ada Lovelace")
+            .id("lovelace")
+            .build();
 
-        let grantee = Grantee {
-            display_name:  Some("Ada Lovelace".into()),
-            email_address: Some("lovelace@example.org".into()),
-            id:            Some("lovelace".into()),
-            type_:         "N/A".into(),
-            uri:           Some(PRIVATE_GROUP.into()),
-        };
+        let grantee = Grantee::builder()
+            .display_name("Ada Lovelace")
+            .email_address("lovelace@example.org")
+            .id("lovelace")
+            .r#type(Type::Unknown("N/A".into()))
+            .uri(PRIVATE_GROUP)
+            .build();
 
-        let grant = Grant {
-            grantee:    Some(grantee),
-            permission: Some("private".into()),
-        };
+        let grant = Grant::builder()
+            .grantee(grantee)
+            .permission(Permission::Unknown("private".into()))
+            .build();
 
-        let output = GetBucketAclOutput {
-            grants: Some(vec![grant]),
-            owner:  Some(owner),
-        };
+        let output = GetBucketAclOutput::builder()
+            .grants(grant)
+            .owner(owner)
+            .build();
 
         let expected = BucketAcl::Private;
 
@@ -112,28 +114,28 @@ mod tests {
 
     #[test]
     fn test_from_for_bucket_acl_public() {
-        let owner = Owner {
-            display_name: Some("Ada Lovelace".into()),
-            id:           Some("lovelace".into()),
-        };
+        let owner = Owner::builder()
+            .display_name("Ada Lovelace")
+            .id("lovelace")
+            .build();
 
-        let grantee = Grantee {
-            display_name:  Some("Ada Lovelace".into()),
-            email_address: Some("lovelace@example.org".into()),
-            id:            Some("lovelace".into()),
-            type_:         "N/A".into(),
-            uri:           Some(PUBLIC_GROUP.into()),
-        };
+        let grantee = Grantee::builder()
+            .display_name("Ada Lovelace")
+            .email_address("lovelace@example.org")
+            .id("lovelace")
+            .r#type(Type::Unknown("N/A".into()))
+            .uri(PUBLIC_GROUP)
+            .build();
 
-        let grant = Grant {
-            grantee:    Some(grantee),
-            permission: Some("public".into()),
-        };
+        let grant = Grant::builder()
+            .grantee(grantee)
+            .permission(Permission::Unknown("public".into()))
+            .build();
 
-        let output = GetBucketAclOutput {
-            grants: Some(vec![grant]),
-            owner:  Some(owner),
-        };
+        let output = GetBucketAclOutput::builder()
+            .set_grants(Some(vec![grant]))
+            .owner(owner)
+            .build();
 
         let expected = BucketAcl::Public;
 

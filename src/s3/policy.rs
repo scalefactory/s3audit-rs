@@ -4,7 +4,7 @@ use anyhow::{
     Result,
 };
 use crate::common::Emoji;
-use rusoto_s3::GetBucketPolicyOutput;
+use aws_sdk_s3::output::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
 use std::convert::TryFrom;
@@ -195,9 +195,9 @@ mod tests {
             Some(policy) => Some(policy.to_string()),
         };
 
-        let output = GetBucketPolicyOutput {
-            policy: policy,
-        };
+        let output = GetBucketPolicyOutput::builder()
+            .set_policy(policy)
+            .build();
 
         let policy: BucketPolicy = output.try_into().unwrap();
 
@@ -238,9 +238,9 @@ mod tests {
 
     #[test]
     fn test_policy_no_policy() {
-        let output = GetBucketPolicyOutput {
-            policy: None,
-        };
+        let output = GetBucketPolicyOutput::builder()
+            .set_policy(None)
+            .build();
 
         let policy = BucketPolicy::try_from(output);
 

@@ -1,10 +1,9 @@
 // Bucket encryption config
 use crate::common::Emoji;
-use rusoto_core::RusotoError;
-use rusoto_s3::{
-    GetBucketEncryptionError,
-    GetBucketEncryptionOutput,
-};
+use aws_sdk_s3::SdkError;
+use aws_sdk_s3::error::GetBucketEncryptionError;
+use aws_sdk_s3::model::ServerSideEncryption;
+use aws_sdk_s3::output::GetBucketEncryptionOutput;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -18,14 +17,14 @@ pub enum BucketEncryption {
 // Type alias to avoid long lines in From impl.
 type EncryptionResult = Result<
     GetBucketEncryptionOutput,
-    RusotoError<GetBucketEncryptionError>,
+    SdkError<GetBucketEncryptionError>,
 >;
 
 // Could probably replace a log of this with some .and_then shenanigans.
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
     fn from(output: GetBucketEncryptionOutput) -> Self {
         let sse_algorithm = output.server_side_encryption_configuration
-            .map(|config| config.rules)
+            .and_then(|config| config.rules)
             .and_then(|rules| {
                 if rules.is_empty() {
                     None
@@ -36,13 +35,14 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
                 }
             })
             .and_then(|rule| rule.apply_server_side_encryption_by_default)
-            .map(|rule| rule.sse_algorithm);
+            .and_then(|rule| rule.sse_algorithm);
 
-        match sse_algorithm.as_deref() {
-            Some("AES256")  => Self::Default,
-            Some("aws:kms") => Self::Kms,
-            Some(algorithm) => Self::Unknown(algorithm.into()),
-            None            => Self::None,
+        match sse_algorithm {
+            Some(ServerSideEncryption::Aes256)     => Self::Default,
+            Some(ServerSideEncryption::AwsKms)     => Self::Kms,
+            Some(ServerSideEncryption::Unknown(s)) => Self::Unknown(s),
+            None                                   => Self::None,
+            Some(_)                                => Self::Unknown("unknown".into()),
         }
     }
 }
@@ -93,7 +93,7 @@ impl fmt::Display for BucketEncryption {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusoto_s3::{
+    use aws_sdk_s3::model::{
         ServerSideEncryptionByDefault,
         ServerSideEncryptionConfiguration,
         ServerSideEncryptionRule,
@@ -101,23 +101,21 @@ mod tests {
 
     #[test]
     fn test_from_default_encryption() {
-        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
-            sse_algorithm: "AES256".into(),
-            ..Default::default()
-        };
+        let default = ServerSideEncryptionByDefault::builder()
+            .sse_algorithm(ServerSideEncryption::Aes256)
+            .build();
 
-        let server_side_encryption_rule = ServerSideEncryptionRule {
-            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
-            ..Default::default()
-        };
+        let rule = ServerSideEncryptionRule::builder()
+            .apply_server_side_encryption_by_default(default)
+            .build();
 
-        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
-            rules: vec![server_side_encryption_rule],
-        };
+        let configuration = ServerSideEncryptionConfiguration::builder()
+            .rules(rule)
+            .build();
 
-        let output = GetBucketEncryptionOutput {
-            server_side_encryption_configuration: Some(server_side_encryption_configuration),
-        };
+        let output = GetBucketEncryptionOutput::builder()
+            .server_side_encryption_configuration(configuration)
+            .build();
 
         let expected = BucketEncryption::Default;
 
@@ -128,23 +126,22 @@ mod tests {
 
     #[test]
     fn test_from_kms_encryption() {
-        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
-            kms_master_key_id: Some("arn:aws:foo:bar:test".into()),
-            sse_algorithm: "aws:kms".into(),
-        };
+        let default = ServerSideEncryptionByDefault::builder()
+            .kms_master_key_id("arn:aws:foo:bar:test")
+            .sse_algorithm(ServerSideEncryption::AwsKms)
+            .build();
 
-        let server_side_encryption_rule = ServerSideEncryptionRule {
-            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
-            ..Default::default()
-        };
+        let rule = ServerSideEncryptionRule::builder()
+            .apply_server_side_encryption_by_default(default)
+            .build();
 
-        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
-            rules: vec![server_side_encryption_rule],
-        };
+        let configuration = ServerSideEncryptionConfiguration::builder()
+            .rules(rule)
+            .build();
 
-        let output = GetBucketEncryptionOutput {
-            server_side_encryption_configuration: Some(server_side_encryption_configuration),
-        };
+        let output = GetBucketEncryptionOutput::builder()
+            .server_side_encryption_configuration(configuration)
+            .build();
 
         let expected = BucketEncryption::Kms;
 
@@ -155,23 +152,21 @@ mod tests {
 
     #[test]
     fn test_from_unknown_encryption() {
-        let server_side_encryption_by_default = ServerSideEncryptionByDefault {
-            sse_algorithm: "wat".into(),
-            ..Default::default()
-        };
+        let default = ServerSideEncryptionByDefault::builder()
+            .sse_algorithm(ServerSideEncryption::Unknown("wat".into()))
+            .build();
 
-        let server_side_encryption_rule = ServerSideEncryptionRule {
-            apply_server_side_encryption_by_default: Some(server_side_encryption_by_default),
-            ..Default::default()
-        };
+        let rule = ServerSideEncryptionRule::builder()
+            .apply_server_side_encryption_by_default(default)
+            .build();
 
-        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
-            rules: vec![server_side_encryption_rule],
-        };
+        let configuration = ServerSideEncryptionConfiguration::builder()
+            .rules(rule)
+            .build();
 
-        let output = GetBucketEncryptionOutput {
-            server_side_encryption_configuration: Some(server_side_encryption_configuration),
-        };
+        let output = GetBucketEncryptionOutput::builder()
+            .server_side_encryption_configuration(configuration)
+            .build();
 
         let expected = BucketEncryption::Unknown("wat".into());
 
@@ -182,13 +177,13 @@ mod tests {
 
     #[test]
     fn test_from_no_rules() {
-        let server_side_encryption_configuration = ServerSideEncryptionConfiguration {
-            rules: Vec::new()
-        };
+        let configuration = ServerSideEncryptionConfiguration::builder()
+            .set_rules(Some(Vec::new()))
+            .build();
 
-        let output = GetBucketEncryptionOutput {
-            server_side_encryption_configuration: Some(server_side_encryption_configuration),
-        };
+        let output = GetBucketEncryptionOutput::builder()
+            .server_side_encryption_configuration(configuration)
+            .build();
 
         let expected = BucketEncryption::None;
 
@@ -199,9 +194,9 @@ mod tests {
 
     #[test]
     fn test_from_no_sse_config() {
-        let output = GetBucketEncryptionOutput {
-            server_side_encryption_configuration: None,
-        };
+        let output = GetBucketEncryptionOutput::builder()
+            .set_server_side_encryption_configuration(None)
+            .build();
 
         let expected = BucketEncryption::None;
 

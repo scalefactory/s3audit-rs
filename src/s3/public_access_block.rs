@@ -1,6 +1,6 @@
 // Implements a nice enum for expressing public access block status
 use crate::common::Emoji;
-use rusoto_s3::GetPublicAccessBlockOutput;
+use aws_sdk_s3::output::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
 
@@ -58,12 +58,10 @@ impl From<GetPublicAccessBlockOutput> for PublicAccessBlock {
         let config = output.public_access_block_configuration
             .expect("public_access_block_configuration");
 
-        // These fields are all documented as being required, so unwrap should
-        // be fine.
-        let block_public_acls = config.block_public_acls.unwrap();
-        let block_public_policy = config.block_public_policy.unwrap();
-        let ignore_public_acls = config.ignore_public_acls.unwrap();
-        let restrict_public_buckets = config.restrict_public_buckets.unwrap();
+        let block_public_acls = config.block_public_acls;
+        let block_public_policy = config.block_public_policy;
+        let ignore_public_acls = config.ignore_public_acls;
+        let restrict_public_buckets = config.restrict_public_buckets;
 
         let blocks = vec![
             PublicAccessBlockType::BlockPublicAcls(block_public_acls),
@@ -88,20 +86,20 @@ impl Deref for PublicAccessBlock {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusoto_s3::PublicAccessBlockConfiguration;
+    use aws_sdk_s3::model::PublicAccessBlockConfiguration;
 
     #[test]
     fn test_from() {
-        let public_access_block_configuration = PublicAccessBlockConfiguration {
-            block_public_acls: Some(true),
-            block_public_policy: Some(false),
-            ignore_public_acls: Some(true),
-            restrict_public_buckets: Some(false),
-        };
+        let public_access_block_configuration = PublicAccessBlockConfiguration::builder()
+            .block_public_acls(true)
+            .block_public_policy(false)
+            .ignore_public_acls(true)
+            .restrict_public_buckets(false)
+            .build();
 
-        let output = GetPublicAccessBlockOutput {
-            public_access_block_configuration: Some(public_access_block_configuration),
-        };
+        let output = GetPublicAccessBlockOutput::builder()
+            .public_access_block_configuration(public_access_block_configuration)
+            .build();
 
         let expected = PublicAccessBlock(vec![
             PublicAccessBlockType::BlockPublicAcls(true),
