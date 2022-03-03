@@ -1,9 +1,9 @@
 // Bucket encryption config
 use crate::common::Emoji;
-use aws_sdk_s3::SdkError;
 use aws_sdk_s3::error::GetBucketEncryptionError;
 use aws_sdk_s3::model::ServerSideEncryption;
 use aws_sdk_s3::output::GetBucketEncryptionOutput;
+use aws_sdk_s3::types::SdkError;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
