@@ -13,10 +13,10 @@ use crate::s3::{
 };
 use anyhow::Result;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_s3::SdkError;
 use aws_sdk_s3::client::Client as S3Client;
 use aws_sdk_s3::model::BucketLocationConstraint;
 use aws_sdk_s3::output::GetBucketPolicyOutput;
+use aws_sdk_s3::types::SdkError;
 use aws_types::region::Region;
 use log::{
     debug,
