@@ -4,6 +4,7 @@
 #![allow(clippy::redundant_field_names)]
 use anyhow::Result;
 use clap::Parser;
+use clap::builder::PossibleValuesParser;
 use colored::control::SHOULD_COLORIZE;
 use std::env;
 
@@ -33,7 +34,7 @@ struct CliConfig {
         long,
         short,
         value_name = "AUDIT",
-        possible_values = &[
+        value_parser = PossibleValuesParser::new(&[
             "acl",
             "all",
             "cloudfront",
@@ -47,7 +48,7 @@ struct CliConfig {
             "sse",
             "versioning",
             "website",
-        ],
+        ]),
     )]
     disable_check: Option<Vec<Audit>>,
 
@@ -56,7 +57,7 @@ struct CliConfig {
         long,
         short,
         value_name = "AUDIT",
-        possible_values = &[
+        value_parser = PossibleValuesParser::new(&[
             "acl",
             "all",
             "cloudfront",
@@ -70,7 +71,7 @@ struct CliConfig {
             "sse",
             "versioning",
             "website",
-        ],
+        ]),
     )]
     enable_check: Option<Vec<Audit>>,
 
@@ -79,8 +80,8 @@ struct CliConfig {
         long,
         short,
         default_value = "text",
-        possible_values = &["csv", "text"],
         value_name = "FORMAT",
+        value_parser = PossibleValuesParser::new(&["csv", "text"]),
     )]
     format: ReportType,
 

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum ReportType {
     Csv,
     Text,

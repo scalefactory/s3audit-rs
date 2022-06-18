@@ -21,7 +21,7 @@ macro_rules! hashset {
     };
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Audit {
     Acl,
     All,
@@ -71,7 +71,7 @@ impl Default for Audit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Audits(HashSet<Audit>);
 
 impl Default for Audits {
