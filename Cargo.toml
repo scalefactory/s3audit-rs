@@ -6,12 +6,14 @@ authors = [
     "Tim Bannister <tim@scalefactory.com>",
     "David O'Rourke <david@scalefactory.com>",
 ]
-edition = "2018"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/scalefactory/s3audit-rs"
 repository = "https://github.com/scalefactory/s3audit-rs"
 description = "Audit Amazon S3 buckets against recommended practices"
+rust-version = "1.58.1"
+resolver = "2"
 categories = [
     "command-line-utilities",
 ]
