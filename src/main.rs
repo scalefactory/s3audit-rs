@@ -19,10 +19,10 @@ use s3::{
 };
 
 #[derive(Debug, Parser)]
-#[clap(about, rename_all = "kebab")]
+#[command(about, rename_all = "kebab")]
 struct CliConfig {
     /// Specify a specific bucket to audit
-    #[clap(
+    #[arg(
         long,
         short,
         value_name = "BUCKET",
@@ -30,7 +30,7 @@ struct CliConfig {
     bucket: Option<String>,
 
     /// Disable specific audits
-    #[clap(
+    #[arg(
         long,
         short,
         value_name = "AUDIT",
@@ -53,7 +53,7 @@ struct CliConfig {
     disable_check: Option<Vec<Audit>>,
 
     /// Enable specific audits
-    #[clap(
+    #[arg(
         long,
         short,
         value_name = "AUDIT",
@@ -76,7 +76,7 @@ struct CliConfig {
     enable_check: Option<Vec<Audit>>,
 
     /// Specify the report output format
-    #[clap(
+    #[arg(
         long,
         short,
         default_value = "text",
@@ -86,7 +86,7 @@ struct CliConfig {
     format: ReportType,
 
     /// Specify an AWS profile name to use
-    #[clap(
+    #[arg(
         long,
         short,
         value_name = "NAME",
