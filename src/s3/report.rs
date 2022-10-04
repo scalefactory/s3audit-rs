@@ -84,7 +84,7 @@ impl Report {
         if let Some(policy) = &self.policy {
             match &policy {
                 None => {
-                    println!("    {}", NoBucketPolicy { })
+                    println!("    {}", NoBucketPolicy { });
                 },
                 Some(policy) => {
                     println!("    {}", policy.wildcards());

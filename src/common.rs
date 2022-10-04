@@ -26,9 +26,11 @@ impl fmt::Display for Emoji {
 
 impl From<bool> for Emoji {
     fn from(item: bool) -> Self {
-        match item {
-            true => Self::Tick,
-            _    => Self::Cross,
+        if item {
+            Self::Tick
+        }
+        else {
+            Self::Cross
         }
     }
 }

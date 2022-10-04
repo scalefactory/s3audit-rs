@@ -78,7 +78,7 @@ impl Client {
         let bucket_names = output.buckets.map_or_else(Vec::new, |buckets| {
             buckets
                 .iter()
-                .filter_map(|bucket| bucket.name.to_owned())
+                .filter_map(|bucket| bucket.name.clone())
                 .collect()
         });
 
@@ -387,8 +387,8 @@ impl Client {
 
         // We get a new client for each bucket, as we must interact with
         // buckets from the region they reside in.
-        for bucket in buckets.iter() {
-            let region = Some(bucket.region.to_owned());
+        for bucket in &buckets {
+            let region = Some(bucket.region.clone());
             let client = Self::new(region).await;
             let report = client.bucket_report(&bucket.name, &audits).await?;
 

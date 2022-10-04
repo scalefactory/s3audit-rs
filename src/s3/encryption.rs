@@ -6,7 +6,7 @@ use aws_sdk_s3::output::GetBucketEncryptionOutput;
 use aws_sdk_s3::types::SdkError;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum BucketEncryption {
     Default,
     Kms,
@@ -31,7 +31,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
                 }
                 else {
                     // first() returns an Option<&T>, we need an Option<T>
-                    rules.first().map(|rule| rule.to_owned())
+                    rules.first().cloned()
                 }
             })
             .and_then(|rule| rule.apply_server_side_encryption_by_default)

@@ -3,7 +3,7 @@ use crate::common::Emoji;
 use aws_sdk_s3::output::GetBucketLoggingOutput;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum BucketLogging {
     Enabled(String),
     Disabled,

@@ -7,7 +7,7 @@ use aws_sdk_s3::model::{
 use aws_sdk_s3::output::GetBucketVersioningOutput;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum MfaStatus {
     Enabled,
     Disabled,
@@ -40,7 +40,7 @@ impl fmt::Display for MfaStatus {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum VersioningStatus {
     Enabled,
     Suspended,
@@ -73,7 +73,7 @@ impl fmt::Display for VersioningStatus {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct BucketVersioning {
     mfa_delete: MfaStatus,
     versioning: VersioningStatus,
@@ -82,10 +82,10 @@ pub struct BucketVersioning {
 impl From<GetBucketVersioningOutput> for BucketVersioning {
     fn from(output: GetBucketVersioningOutput) -> Self {
         let mfa_delete: MfaStatus = output.mfa_delete
-            .map_or(MfaStatus::Disabled, |mfa_delete| mfa_delete.into());
+            .map_or(MfaStatus::Disabled, MfaStatus::from);
 
         let versioning: VersioningStatus = output.status
-            .map_or(VersioningStatus::Suspended, |status| status.into());
+            .map_or(VersioningStatus::Suspended, VersioningStatus::from);
 
         Self {
             mfa_delete: mfa_delete,

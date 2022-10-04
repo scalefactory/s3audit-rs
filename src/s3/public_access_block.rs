@@ -4,7 +4,7 @@ use aws_sdk_s3::output::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum PublicAccessBlockType {
     BlockPublicAcls(bool),
     BlockPublicPolicy(bool),
@@ -37,7 +37,7 @@ impl fmt::Display for PublicAccessBlockType {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct PublicAccessBlock(Vec<PublicAccessBlockType>);
 
 impl Default for PublicAccessBlock {

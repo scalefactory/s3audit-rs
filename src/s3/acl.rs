@@ -9,7 +9,7 @@ const PUBLIC_URIS: &[&str] = &[
     "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
 ];
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum BucketAcl {
     Private,
     Public,

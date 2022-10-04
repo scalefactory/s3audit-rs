@@ -125,16 +125,16 @@ impl From<&Report> for CsvOutput {
             for block in blocks.iter() {
                 match block {
                     PublicAccessBlockType::BlockPublicAcls(b) => {
-                        output.block_public_acls = Some(*b)
+                        output.block_public_acls = Some(*b);
                     },
                     PublicAccessBlockType::BlockPublicPolicy(b) => {
-                        output.block_public_policy = Some(*b)
+                        output.block_public_policy = Some(*b);
                     },
                     PublicAccessBlockType::IgnorePublicAcls(b) => {
-                        output.ignore_public_acls = Some(*b)
+                        output.ignore_public_acls = Some(*b);
                     },
                     PublicAccessBlockType::RestrictPublicBuckets(b) => {
-                        output.restrict_public_buckets = Some(*b)
+                        output.restrict_public_buckets = Some(*b);
                     },
                 }
             }

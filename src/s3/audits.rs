@@ -43,21 +43,22 @@ impl FromStr for Audit {
 
         match s.as_str() {
             // Names matching the above options
-            "acl"                    => Ok(Self::Acl),
-            "all"                    => Ok(Self::All),
-            "cloudfront"             => Ok(Self::Cloudfront),
-            "logging"                => Ok(Self::Logging),
-            "mfa-delete"             => Ok(Self::MfaDelete),
-            "policy"                 => Ok(Self::Policy),
-            "public-access-blocks"   => Ok(Self::PublicAccessBlocks),
-            "server-side-encryption" => Ok(Self::ServerSideEncryption),
-            "versioning"             => Ok(Self::Versioning),
-            "website"                => Ok(Self::Website),
+            "acl"                   => Ok(Self::Acl),
+            "all"                   => Ok(Self::All),
+            "cloudfront"            => Ok(Self::Cloudfront),
+            "logging"               => Ok(Self::Logging),
+            "policy"                => Ok(Self::Policy),
+            "public-access-blocks"  => Ok(Self::PublicAccessBlocks),
+            "versioning"            => Ok(Self::Versioning),
+            "website"               => Ok(Self::Website),
 
             // Aliases
-            "encryption" => Ok(Self::ServerSideEncryption),
-            "mfa"        => Ok(Self::MfaDelete),
-            "sse"        => Ok(Self::ServerSideEncryption),
+            "encryption" | "server-side-encryption" | "sse" => {
+                Ok(Self::ServerSideEncryption)
+            },
+            "mfa" | "mfa-delete" => {
+                Ok(Self::MfaDelete)
+            },
 
             // Invalid audits
             _ => Err(anyhow!("Unknown Report Type")),

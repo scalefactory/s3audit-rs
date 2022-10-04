@@ -103,12 +103,12 @@ fn should_colour_output() {
     match env::var("TERM") {
         Err(_) => {
             // Not sure about terminal type; play safe
-            SHOULD_COLORIZE.set_override(false)
+            SHOULD_COLORIZE.set_override(false);
         },
         Ok(termtype) => {
             // Use colour unless dumb terminal detected
             if termtype == "dumb" {
-                SHOULD_COLORIZE.set_override(false)
+                SHOULD_COLORIZE.set_override(false);
             }
         },
     }

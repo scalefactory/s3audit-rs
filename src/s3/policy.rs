@@ -12,10 +12,10 @@ use std::convert::TryFrom;
 mod actions;
 mod principals;
 
-use actions::*;
-use principals::*;
+use actions::Action;
+use principals::Principal;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct CloudFrontDistributions(usize);
 
 impl fmt::Display for CloudFrontDistributions {
@@ -51,7 +51,7 @@ impl fmt::Display for CloudFrontDistributions {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct Wildcards(usize);
 
 impl Wildcards {
@@ -109,7 +109,7 @@ impl BucketPolicy {
     }
 
     pub fn wildcards(&self) -> Wildcards {
-        let mut wildcards: Wildcards = Default::default();
+        let mut wildcards = Wildcards::default();
 
         wildcards.add(self.actions.wildcards());
         wildcards.add(self.principals.wildcards());
@@ -138,8 +138,8 @@ impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
         // The policy will contain an array of statements.
         let statements = &jv["Statement"];
 
-        let mut actions: Action = Default::default();
-        let mut principals: Principal = Default::default();
+        let mut actions = Action::default();
+        let mut principals = Principal::default();
 
         let statements_array = statements.as_array()
             .expect("Bucket policy has no Statements element");

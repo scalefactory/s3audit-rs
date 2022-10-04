@@ -5,7 +5,7 @@ use aws_sdk_s3::output::GetBucketWebsiteOutput;
 use aws_sdk_s3::types::SdkError;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum BucketWebsite {
     Enabled,
     Disabled,
