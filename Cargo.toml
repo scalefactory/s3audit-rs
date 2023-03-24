@@ -30,9 +30,9 @@ exclude = [
 
 [dependencies]
 anyhow = "1.0"
-aws-config = "0.52.0"
-aws-sdk-s3 = "0.22.0"
-aws-types = "0.52.0"
+aws-config = "0.54.0"
+aws-sdk-s3 = "0.24.0"
+aws-types = "0.54.0"
 colored = "2"
 csv = "1.2"
 log = "0.4"
