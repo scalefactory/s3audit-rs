@@ -137,17 +137,16 @@ impl Client {
         debug!("Bucket location returned: {:?}", output);
 
         let location = match output.location_constraint {
-            Some(BucketLocationConstraint::Eu)         => "eu-west-1".to_string(),
-            Some(BucketLocationConstraint::Unknown(s)) => {
+            Some(BucketLocationConstraint::Eu) => "eu-west-1".to_string(),
+            Some(other @ _) => {
                 // us-east-1 comes back as a blank string, we have to treat it
                 // specially.
-                match s.as_str() {
+                match other.as_str() {
                     "" => "us-east-1".to_string(),
-                    _  => s,
+                    s  => s.to_string(),
                 }
             },
-            Some(location)                             => location.as_str().to_string(),
-            None                                       => "us-east-1".to_string(),
+            None                               => "us-east-1".to_string(),
         };
 
         Ok(location)

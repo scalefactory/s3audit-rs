@@ -91,13 +91,13 @@ mod tests {
             .display_name("Ada Lovelace")
             .email_address("lovelace@example.org")
             .id("lovelace")
-            .r#type(Type::Unknown("N/A".into()))
+            .r#type(Type::from("N/A"))
             .uri(PRIVATE_GROUP)
             .build();
 
         let grant = Grant::builder()
             .grantee(grantee)
-            .permission(Permission::Unknown("private".into()))
+            .permission(Permission::from("private"))
             .build();
 
         let output = GetBucketAclOutput::builder()
@@ -123,13 +123,13 @@ mod tests {
             .display_name("Ada Lovelace")
             .email_address("lovelace@example.org")
             .id("lovelace")
-            .r#type(Type::Unknown("N/A".into()))
+            .r#type(Type::from("N/A"))
             .uri(PUBLIC_GROUP)
             .build();
 
         let grant = Grant::builder()
             .grantee(grantee)
-            .permission(Permission::Unknown("public".into()))
+            .permission(Permission::from("public"))
             .build();
 
         let output = GetBucketAclOutput::builder()

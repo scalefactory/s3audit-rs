@@ -38,11 +38,12 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             .and_then(|rule| rule.sse_algorithm);
 
         match sse_algorithm {
-            Some(ServerSideEncryption::Aes256)     => Self::Default,
-            Some(ServerSideEncryption::AwsKms)     => Self::Kms,
-            Some(ServerSideEncryption::Unknown(s)) => Self::Unknown(s),
-            None                                   => Self::None,
-            Some(_)                                => Self::Unknown("unknown".into()),
+            None                               => Self::None,
+            Some(ServerSideEncryption::Aes256) => Self::Default,
+            Some(ServerSideEncryption::AwsKms) => Self::Kms,
+            Some(unknown @ _)                  => {
+                Self::Unknown(unknown.as_str().into())
+            },
         }
     }
 }
@@ -153,7 +154,7 @@ mod tests {
     #[test]
     fn test_from_unknown_encryption() {
         let default = ServerSideEncryptionByDefault::builder()
-            .sse_algorithm(ServerSideEncryption::Unknown("wat".into()))
+            .sse_algorithm(ServerSideEncryption::from("wat"))
             .build();
 
         let rule = ServerSideEncryptionRule::builder()
