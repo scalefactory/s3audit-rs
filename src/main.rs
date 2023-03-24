@@ -1,7 +1,10 @@
 //! s3audit-rs: A tool for auditing S3 buckets
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::option_option)]
 #![allow(clippy::redundant_field_names)]
+#![allow(clippy::uninlined_format_args)]
 use anyhow::Result;
 use clap::Parser;
 use clap::builder::PossibleValuesParser;

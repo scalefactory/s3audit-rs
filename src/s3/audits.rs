@@ -101,7 +101,7 @@ impl Audits {
     }
 
     // Returns an empty set
-    fn empty(self) -> Self {
+    fn empty() -> Self {
         Self(HashSet::new())
     }
 
@@ -111,7 +111,7 @@ impl Audits {
             // If all audits were disabled, short circuit and just return a new
             // empty Audits struct.
             if audits.contains(&Audit::All) {
-                return self.empty();
+                return Self::empty();
             }
 
             for audit in audits {
