@@ -29,15 +29,12 @@ jobs:
             ~/.cargo/registry
             target
       - name: 'Install Toolchain'
-        uses: 'actions-rs/toolchain@v1'
+        uses: 'dtolnay/rust-toolchain@v1'
         with:
-          profile: 'minimal'
           toolchain: "${{ matrix.toolchain-version }}"
-          override: true
       - name: 'Run Default Feature Tests'
-        uses: 'actions-rs/cargo@v1'
-        with:
-          command: 'test'
+        run: |
+          cargo test
 # Commented out until we have a man page to lint.
 #  mandoc:
 #    name: 'Lint Man Page'

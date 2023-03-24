@@ -14,16 +14,12 @@ jobs:
         with:
           fetch-depth: 1
       - name: 'Install Toolchain'
-        uses: 'actions-rs/toolchain@v1'
+        uses: 'dtolnay/rust-toolchain@v1'
         with:
-          profile: 'minimal'
           toolchain: 'stable'
-          override: true
       - name: 'Package Crate'
-        uses: 'actions-rs/cargo@v1'
-        with:
-          command: 'publish'
-          args: '--dry-run'
+        run: |
+          cargo publish --dry-run
       - name: 'Rename Crate to tar.gz'
         id: 'rename_crate'
         run: |
@@ -80,9 +76,7 @@ jobs:
       # We don't verify the publish here, as we verified as part of the dry-run
       # above.
       - name: 'Publish to Crates.io'
-        uses: 'actions-rs/cargo@v1'
         env:
           CARGO_REGISTRY_TOKEN: '${{ secrets.CARGO_TOKEN }}'
-        with:
-          command: 'publish'
-          args: '--no-verify'
+        run: |
+          cargo publish --no-verify
