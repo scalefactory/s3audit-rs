@@ -41,7 +41,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
             None                               => Self::None,
             Some(ServerSideEncryption::Aes256) => Self::Default,
             Some(ServerSideEncryption::AwsKms) => Self::Kms,
-            Some(unknown @ _)                  => {
+            Some(unknown)                      => {
                 Self::Unknown(unknown.as_str().into())
             },
         }
