@@ -17,9 +17,8 @@ pub enum BucketAcl {
 
 impl From<GetBucketAclOutput> for BucketAcl {
     fn from(output: GetBucketAclOutput) -> Self {
-        let grants = match output.grants {
-            None         => return Self::Private,
-            Some(grants) => grants,
+        let Some(grants) = output.grants() else {
+            return Self::Private;
         };
 
         // Might have no grants
@@ -29,17 +28,15 @@ impl From<GetBucketAclOutput> for BucketAcl {
 
         // Loop over grants checking for public URIs
         for grant in grants {
-            let grantee = match grant.grantee {
-                None          => continue,
-                Some(grantee) => grantee,
+            let Some(grantee) = grant.grantee() else {
+                continue;
             };
 
-            let uri = match grantee.uri {
-                None      => continue,
-                Some(uri) => uri,
+            let Some(uri) = grantee.uri() else {
+                continue;
             };
 
-            if PUBLIC_URIS.contains(&&*uri) {
+            if PUBLIC_URIS.contains(&uri) {
                 return Self::Public;
             }
         }
