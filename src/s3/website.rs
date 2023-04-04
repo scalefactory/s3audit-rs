@@ -1,8 +1,10 @@
 // Bucket website
 use crate::common::Emoji;
-use aws_sdk_s3::error::GetBucketWebsiteError;
-use aws_sdk_s3::output::GetBucketWebsiteOutput;
-use aws_sdk_s3::types::SdkError;
+use aws_sdk_s3::error::SdkError;
+use aws_sdk_s3::operation::get_bucket_website::{
+    GetBucketWebsiteError,
+    GetBucketWebsiteOutput,
+};
 use std::fmt;
 
 #[derive(Debug, Eq, PartialEq)]

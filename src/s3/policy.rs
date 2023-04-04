@@ -4,7 +4,7 @@ use anyhow::{
     Result,
 };
 use crate::common::Emoji;
-use aws_sdk_s3::output::GetBucketPolicyOutput;
+use aws_sdk_s3::operation::get_bucket_policy::GetBucketPolicyOutput;
 use serde_json::Value;
 use std::fmt;
 use std::convert::TryFrom;
@@ -123,17 +123,12 @@ impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
 
     fn try_from(output: GetBucketPolicyOutput) -> Result<Self, Self::Error> {
         // Caller must have checked that the policy exists; fail otherwise
-        let policy = match output.policy {
-            None => {
-                return Err(anyhow!("Invalid bucket policy"))
-            },
-            Some(policy_string) => {
-                policy_string
-            }
+        let Some(policy) = output.policy() else {
+            return Err(anyhow!("Invalid bucket policy"));
         };
 
         // We expect that AWS will always give us a well formed JSON policy
-        let jv: Value = serde_json::from_str(&policy)?;
+        let jv: Value = serde_json::from_str(policy)?;
 
         // The policy will contain an array of statements.
         let statements = &jv["Statement"];

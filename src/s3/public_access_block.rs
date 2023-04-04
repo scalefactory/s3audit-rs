@@ -1,6 +1,6 @@
 // Implements a nice enum for expressing public access block status
 use crate::common::Emoji;
-use aws_sdk_s3::output::GetPublicAccessBlockOutput;
+use aws_sdk_s3::operation::get_public_access_block::GetPublicAccessBlockOutput;
 use std::fmt;
 use std::ops::Deref;
 
@@ -86,7 +86,7 @@ impl Deref for PublicAccessBlock {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_sdk_s3::model::PublicAccessBlockConfiguration;
+    use aws_sdk_s3::types::PublicAccessBlockConfiguration;
 
     #[test]
     fn test_from() {

@@ -14,9 +14,9 @@ use crate::s3::{
 use anyhow::Result;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_s3::client::Client as S3Client;
-use aws_sdk_s3::model::BucketLocationConstraint;
-use aws_sdk_s3::output::GetBucketPolicyOutput;
-use aws_sdk_s3::types::SdkError;
+use aws_sdk_s3::error::SdkError;
+use aws_sdk_s3::operation::get_bucket_policy::GetBucketPolicyOutput;
+use aws_sdk_s3::types::BucketLocationConstraint;
 use aws_types::region::Region;
 use log::{
     debug,
@@ -75,19 +75,20 @@ impl Client {
             .send()
             .await?;
 
-        let bucket_names = output.buckets.map_or_else(Vec::new, |buckets| {
+        let bucket_names = output.buckets().map_or_else(Vec::new, |buckets| {
             buckets
                 .iter()
-                .filter_map(|bucket| bucket.name.clone())
+                .filter_map(aws_sdk_s3::types::Bucket::name)
                 .collect()
         });
 
         let mut buckets: Vec<Bucket> = Vec::new();
 
         for bucket in bucket_names {
-            let region = self.get_bucket_region(&bucket).await?;
+            let region = self.get_bucket_region(bucket).await?;
+
             let bucket = Bucket {
-                name:   bucket,
+                name:   bucket.to_string(),
                 region: region,
             };
 

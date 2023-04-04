@@ -1,10 +1,10 @@
 // Bucket versioning
 use crate::common::Emoji;
-use aws_sdk_s3::model::{
+use aws_sdk_s3::types::{
     BucketVersioningStatus,
     MfaDeleteStatus,
 };
-use aws_sdk_s3::output::GetBucketVersioningOutput;
+use aws_sdk_s3::operation::get_bucket_versioning::GetBucketVersioningOutput;
 use std::fmt;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -107,7 +107,7 @@ impl BucketVersioning {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_sdk_s3::output::GetBucketVersioningOutput;
+    use aws_sdk_s3::operation::get_bucket_versioning::GetBucketVersioningOutput;
 
     #[test]
     fn test_from_for_bucket_versioning() {

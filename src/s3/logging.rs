@@ -1,6 +1,6 @@
 // Bucket logging
 use crate::common::Emoji;
-use aws_sdk_s3::output::GetBucketLoggingOutput;
+use aws_sdk_s3::operation::get_bucket_logging::GetBucketLoggingOutput;
 use std::fmt;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -38,7 +38,7 @@ impl fmt::Display for BucketLogging {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_sdk_s3::model::LoggingEnabled;
+    use aws_sdk_s3::types::LoggingEnabled;
 
     #[test]
     fn test_from_for_bucket_logging_enabled() {

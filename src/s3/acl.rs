@@ -1,6 +1,6 @@
 // Bucket ACL
 use crate::common::Emoji;
-use aws_sdk_s3::output::GetBucketAclOutput;
+use aws_sdk_s3::operation::get_bucket_acl::GetBucketAclOutput;
 use std::fmt;
 
 // Grantee URIs that indicate public access
@@ -69,7 +69,7 @@ impl fmt::Display for BucketAcl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_sdk_s3::model::{
+    use aws_sdk_s3::types::{
         Grant,
         Grantee,
         Owner,

@@ -1,9 +1,11 @@
 // Bucket encryption config
 use crate::common::Emoji;
-use aws_sdk_s3::error::GetBucketEncryptionError;
-use aws_sdk_s3::model::ServerSideEncryption;
-use aws_sdk_s3::output::GetBucketEncryptionOutput;
-use aws_sdk_s3::types::SdkError;
+use aws_sdk_s3::error::SdkError;
+use aws_sdk_s3::operation::get_bucket_encryption::{
+    GetBucketEncryptionError,
+    GetBucketEncryptionOutput,
+};
+use aws_sdk_s3::types::ServerSideEncryption;
 use std::fmt;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -94,7 +96,7 @@ impl fmt::Display for BucketEncryption {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aws_sdk_s3::model::{
+    use aws_sdk_s3::types::{
         ServerSideEncryptionByDefault,
         ServerSideEncryptionConfiguration,
         ServerSideEncryptionRule,
