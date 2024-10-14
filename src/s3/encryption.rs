@@ -25,8 +25,9 @@ type EncryptionResult = Result<
 // Could probably replace a log of this with some .and_then shenanigans.
 impl From<GetBucketEncryptionOutput> for BucketEncryption {
     fn from(output: GetBucketEncryptionOutput) -> Self {
-        let sse_algorithm = output.server_side_encryption_configuration
-            .and_then(|config| config.rules)
+        let sse_algorithm = output
+            .server_side_encryption_configuration
+            .map(|config| config.rules)
             .and_then(|rules| {
                 if rules.is_empty() {
                     None
@@ -37,7 +38,7 @@ impl From<GetBucketEncryptionOutput> for BucketEncryption {
                 }
             })
             .and_then(|rule| rule.apply_server_side_encryption_by_default)
-            .and_then(|rule| rule.sse_algorithm);
+            .map(|rule| rule.sse_algorithm);
 
         match sse_algorithm {
             None                               => Self::None,
@@ -106,7 +107,8 @@ mod tests {
     fn test_from_default_encryption() {
         let default = ServerSideEncryptionByDefault::builder()
             .sse_algorithm(ServerSideEncryption::Aes256)
-            .build();
+            .build()
+            .unwrap();
 
         let rule = ServerSideEncryptionRule::builder()
             .apply_server_side_encryption_by_default(default)
@@ -114,7 +116,8 @@ mod tests {
 
         let configuration = ServerSideEncryptionConfiguration::builder()
             .rules(rule)
-            .build();
+            .build()
+            .unwrap();
 
         let output = GetBucketEncryptionOutput::builder()
             .server_side_encryption_configuration(configuration)
@@ -132,7 +135,8 @@ mod tests {
         let default = ServerSideEncryptionByDefault::builder()
             .kms_master_key_id("arn:aws:foo:bar:test")
             .sse_algorithm(ServerSideEncryption::AwsKms)
-            .build();
+            .build()
+            .unwrap();
 
         let rule = ServerSideEncryptionRule::builder()
             .apply_server_side_encryption_by_default(default)
@@ -140,7 +144,8 @@ mod tests {
 
         let configuration = ServerSideEncryptionConfiguration::builder()
             .rules(rule)
-            .build();
+            .build()
+            .unwrap();
 
         let output = GetBucketEncryptionOutput::builder()
             .server_side_encryption_configuration(configuration)
@@ -157,7 +162,8 @@ mod tests {
     fn test_from_unknown_encryption() {
         let default = ServerSideEncryptionByDefault::builder()
             .sse_algorithm(ServerSideEncryption::from("wat"))
-            .build();
+            .build()
+            .unwrap();
 
         let rule = ServerSideEncryptionRule::builder()
             .apply_server_side_encryption_by_default(default)
@@ -165,7 +171,8 @@ mod tests {
 
         let configuration = ServerSideEncryptionConfiguration::builder()
             .rules(rule)
-            .build();
+            .build()
+            .unwrap();
 
         let output = GetBucketEncryptionOutput::builder()
             .server_side_encryption_configuration(configuration)
@@ -182,7 +189,8 @@ mod tests {
     fn test_from_no_rules() {
         let configuration = ServerSideEncryptionConfiguration::builder()
             .set_rules(Some(Vec::new()))
-            .build();
+            .build()
+            .unwrap();
 
         let output = GetBucketEncryptionOutput::builder()
             .server_side_encryption_configuration(configuration)

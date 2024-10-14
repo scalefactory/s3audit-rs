@@ -17,9 +17,7 @@ pub enum BucketAcl {
 
 impl From<GetBucketAclOutput> for BucketAcl {
     fn from(output: GetBucketAclOutput) -> Self {
-        let Some(grants) = output.grants() else {
-            return Self::Private;
-        };
+        let grants = output.grants();
 
         // Might have no grants
         if grants.is_empty() {
@@ -90,7 +88,8 @@ mod tests {
             .id("lovelace")
             .r#type(Type::from("N/A"))
             .uri(PRIVATE_GROUP)
-            .build();
+            .build()
+            .unwrap();
 
         let grant = Grant::builder()
             .grantee(grantee)
@@ -122,7 +121,8 @@ mod tests {
             .id("lovelace")
             .r#type(Type::from("N/A"))
             .uri(PUBLIC_GROUP)
-            .build();
+            .build()
+            .unwrap();
 
         let grant = Grant::builder()
             .grantee(grantee)

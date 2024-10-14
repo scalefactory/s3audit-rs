@@ -139,9 +139,10 @@ impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
         let statements_array = statements.as_array()
             .expect("Bucket policy has no Statements element");
 
-        for statement in statements_array.iter() {
+        for statement in statements_array {
             // Policies MUST have an effect. This should never fail.
-            let effect = statement["Effect"].as_str()
+            let effect = statement["Effect"]
+                .as_str()
                 .expect("Bucket policy statement does not have an explicit Effect");
 
             // If we're denying stuff, wildcards are fine and we can proceed
@@ -162,8 +163,8 @@ impl TryFrom<GetBucketPolicyOutput> for BucketPolicy {
         }
 
         Ok(Self {
-            actions: actions,
-            principals: principals,
+            actions,
+            principals,
         })
     }
 }

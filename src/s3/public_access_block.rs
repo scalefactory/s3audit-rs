@@ -58,10 +58,10 @@ impl From<GetPublicAccessBlockOutput> for PublicAccessBlock {
         let config = output.public_access_block_configuration
             .expect("public_access_block_configuration");
 
-        let block_public_acls = config.block_public_acls;
-        let block_public_policy = config.block_public_policy;
-        let ignore_public_acls = config.ignore_public_acls;
-        let restrict_public_buckets = config.restrict_public_buckets;
+        let block_public_acls = config.block_public_acls.unwrap_or(false);
+        let block_public_policy = config.block_public_policy.unwrap_or(false);
+        let ignore_public_acls = config.ignore_public_acls.unwrap_or(false);
+        let restrict_public_buckets = config.restrict_public_buckets.unwrap_or(false);
 
         let blocks = vec![
             PublicAccessBlockType::BlockPublicAcls(block_public_acls),

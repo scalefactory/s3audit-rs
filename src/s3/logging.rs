@@ -12,8 +12,7 @@ pub enum BucketLogging {
 impl From<GetBucketLoggingOutput> for BucketLogging {
     fn from(output: GetBucketLoggingOutput) -> Self {
         output.logging_enabled.map_or(Self::Disabled, |logging| {
-            let target = logging.target_bucket.expect("target bucket");
-            Self::Enabled(target)
+            Self::Enabled(logging.target_bucket)
         })
     }
 }
@@ -44,7 +43,9 @@ mod tests {
     fn test_from_for_bucket_logging_enabled() {
         let logging_enabled = LoggingEnabled::builder()
             .target_bucket("foo")
-            .build();
+            .target_prefix("test")
+            .build()
+            .unwrap();
 
         let output = GetBucketLoggingOutput::builder()
             .set_logging_enabled(Some(logging_enabled))

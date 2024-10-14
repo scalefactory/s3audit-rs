@@ -12,6 +12,7 @@ use crate::s3::{
     Reports,
 };
 use anyhow::Result;
+use aws_config::BehaviorVersion;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_s3::client::Client as S3Client;
 use aws_sdk_s3::error::SdkError;
@@ -52,7 +53,7 @@ impl Client {
             .or_default_provider()
             .or_else("us-east-1");
 
-        let config = aws_config::from_env()
+        let config = aws_config::defaults(BehaviorVersion::latest())
             .region(region_provider)
             .load()
             .await;
@@ -60,7 +61,7 @@ impl Client {
         let client = S3Client::new(&config);
 
         Self {
-            client: client,
+            client,
         }
     }
 
@@ -75,12 +76,11 @@ impl Client {
             .send()
             .await?;
 
-        let bucket_names = output.buckets().map_or_else(Vec::new, |buckets| {
-            buckets
-                .iter()
-                .filter_map(aws_sdk_s3::types::Bucket::name)
-                .collect()
-        });
+        let bucket_names: Vec<&str> = output
+            .buckets()
+            .iter()
+            .filter_map(aws_sdk_s3::types::Bucket::name)
+            .collect();
 
         let mut buckets: Vec<Bucket> = Vec::new();
 
@@ -88,8 +88,8 @@ impl Client {
             let region = self.get_bucket_region(bucket).await?;
 
             let bucket = Bucket {
+                region,
                 name:   bucket.to_string(),
-                region: region,
             };
 
             buckets.push(bucket);
@@ -323,7 +323,7 @@ impl Client {
 
         // Both of these come from the Versioning API, so enabled either of
         // these needs to get the bucket versioning.
-        let versioning_audits = vec![
+        let versioning_audits = [
             Audit::MfaDelete,
             Audit::Versioning,
         ];
@@ -349,14 +349,14 @@ impl Client {
         };
 
         let report = Report {
-            name:                bucket.into(),
-            acl:                 acl,
-            encryption:          encryption,
-            logging:             logging,
-            policy:              policy,
-            public_access_block: public_access_block,
-            versioning:          versioning,
-            website:             website,
+            acl,
+            encryption,
+            logging,
+            policy,
+            public_access_block,
+            versioning,
+            website,
+            name: bucket.into(),
         };
 
         Ok(report)
@@ -373,8 +373,8 @@ impl Client {
             Some(bucket) => {
                 let region = self.get_bucket_region(&bucket).await?;
                 let bucket = Bucket {
+                    region,
                     name: bucket,
-                    region: region,
                 };
 
                 vec![bucket]
