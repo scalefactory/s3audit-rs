@@ -12,7 +12,7 @@ readme = "README.md"
 homepage = "https://github.com/scalefactory/s3audit-rs"
 repository = "https://github.com/scalefactory/s3audit-rs"
 description = "Audit Amazon S3 buckets against recommended practices"
-rust-version = "1.65.0"
+rust-version = "1.78.0"
 resolver = "2"
 categories = [
     "command-line-utilities",
